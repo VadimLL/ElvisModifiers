@@ -17,14 +17,15 @@
   <PropertyGroup>
     
     <PackageId>ElvisModifiers.Analyzer</PackageId>
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>1.0.1</PackageVersion>
     <Copyright>Copyright (c) LeaLan (VadimLL)</Copyright>    
     <Authors>LeaLan (VadimLL)</Authors>
     <AssemblyName>ElvisModifiers.Analyzer</AssemblyName>
     <Description>A Roslyn analyzer to enforce a Elvis access modifiers feature in C#</Description>
-    <PackageTags>C#, access_modifiers, analyzers, OOP, Functional_Programming</PackageTags>
+    <PackageTags>C#, access-modifiers, Elvis-modifiers, analyzers, OOP, Functional-programming</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/VadimLL/ElvisModifiers</PackageProjectUrl>
     <RepositoryUrl>https://github.com/VadimLL/ElvisModifiers</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -60,18 +61,9 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     
-  <!--
-    <ProjectReference Include="..\ElvisModifiersLib\ElvisModifiersLib.csproj">
-      <Aliases>EML</Aliases>
-    </ProjectReference>
-  -->
-    
     <PackageReference Include="ElvisModifiersLib" Version="1.0.0">
       <PrivateAssets>all</PrivateAssets>
-      <!--<Aliases>ElvisModifiersLib</Aliases>-->
-      <!-- It's necessary for compilation, but we don't want it to automatically become a dependency -->
-    </PackageReference>
-  
+    </PackageReference>  
   </ItemGroup>
   
   <PropertyGroup>
@@ -101,19 +93,8 @@
       <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
       <!-- Include .targets file -->
-      <None Include="$(PackageId).targets" Pack="true" PackagePath="build\" />
-    
+      <None Include="$(PackageId).targets" Pack="true" PackagePath="build\" />    
     </ItemGroup>
   </Target>
-
-  <!-- for adding ElvisModifiersLib to the package: -->
-  <!--<Target Name="IncludeElvisModifiersLibInTargetDir" AfterTargets="Build">
-    <ItemGroup>
-      <None Include="$(TargetDir)\ElvisModifiersLib.dll">
-        <Pack>true</Pack>
-        <PackagePath>lib/netstandard2.0</PackagePath>
-      </None>
-    </ItemGroup>
-  </Target>-->  
   
 </Project>
