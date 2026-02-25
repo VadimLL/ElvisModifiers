@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <Nullable>enable</Nullable>
+    <LangVersion>Latest</LangVersion>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>  
+  
+  <PropertyGroup>
+    
+    <PackageId>ElvisModifiersLib</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <PackageTags>ElvisModifiersLib, analyzers</PackageTags>
+    <Title>ElvisModifiersLib</Title>
+    <Copyright>Copyright (c) LeaLan (VadimLL)</Copyright>
+    <Authors>LeaLan (VadimLL)</Authors>
+    <Description>ElvisModifiersLib is depended package using with the 'ElvisModifiers.Analyzer' package</Description>
+    <PackageTags>C#, access_modifiers, analyzers, OOP, Functional_Programming</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageIcon>icon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/VadimLL/ElvisModifiers</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/VadimLL/ElvisModifiers</PackageProjectUrl>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

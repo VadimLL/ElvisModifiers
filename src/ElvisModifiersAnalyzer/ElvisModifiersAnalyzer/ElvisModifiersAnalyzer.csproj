@@ -1,0 +1,119 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <Nullable>enable</Nullable>
+    <LangVersion>Latest</LangVersion>
+    
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    
+    <!-- Avoid ID conflicts with the package project. -->
+    <PackageId>*$(MSBuildProjectFile)*</PackageId>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    
+    <PackageId>ElvisModifiers.Analyzer</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Copyright>Copyright (c) LeaLan (VadimLL)</Copyright>    
+    <Authors>LeaLan (VadimLL)</Authors>
+    <AssemblyName>ElvisModifiers.Analyzer</AssemblyName>
+    <Description>A Roslyn analyzer to enforce a Elvis access modifiers feature in C#</Description>
+    <PackageTags>C#, access_modifiers, analyzers, OOP, Functional_Programming</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/VadimLL/ElvisModifiers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/VadimLL/ElvisModifiers</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyCopyrightAttribute>true</GenerateAssemblyCopyrightAttribute>
+    <DevelopmentDependency>true</DevelopmentDependency>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    
+  <!--
+    <ProjectReference Include="..\ElvisModifiersLib\ElvisModifiersLib.csproj">
+      <Aliases>EML</Aliases>
+    </ProjectReference>
+  -->
+    
+    <PackageReference Include="ElvisModifiersLib" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <!--<Aliases>ElvisModifiersLib</Aliases>-->
+      <!-- It's necessary for compilation, but we don't want it to automatically become a dependency -->
+    </PackageReference>
+  
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput> $(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <!-- Thank you https://www.meziantou.net/packaging-a-roslyn-analyzer-with-nuget-dependencies.htm -->
+  <Target Name="AddNuGetDlls" BeforeTargets="_GetPackageFiles">
+    <!-- Merge the collection of PackageReference and Assemblies using the NuGetPackageId key.
+        This produces a new list containing the DLL path and the "IncludeInPackage" metadata-->
+    <JoinItems Left="@(ResolvedCompileFileDefinitions)" LeftKey="NuGetPackageId" LeftMetadata="*" Right="@(PackageReference)" RightKey="" RightMetadata="*" ItemSpecToUse="Left">
+      <Output TaskParameter="JoinResult" ItemName="_PackagesToPack" />
+    </JoinItems>
+
+    <ItemGroup>
+      <!-- Remove NETStandard DLLs -->
+      <_PackagesToPack Remove="@(_PackagesToPack)" Condition="%(NuGetPackageId) == 'NETStandard.Library' Or %(NuGetPackageId) == 'Microsoft.CodeAnalysis.CSharp' Or %(NuGetPackageId) == 'Microsoft.CodeAnalysis.CSharp.Workspaces'" />
+    </ItemGroup>
+
+    <Message Importance="High" Text="Adding DLLs from the following packages: @(_PackagesToPack->'%(NuGetPackageId)')" />
+
+    <ItemGroup>
+      <!-- Update the collection of items to pack with the DLLs from the NuGet packages -->
+      <None Include="@(_PackagesToPack)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+      <!-- Add the DLL produced by the current project to the NuGet package -->
+      <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+      <!-- Include .targets file -->
+      <None Include="$(PackageId).targets" Pack="true" PackagePath="build\" />
+    
+    </ItemGroup>
+  </Target>
+
+  <!-- for adding ElvisModifiersLib to the package: -->
+  <!--<Target Name="IncludeElvisModifiersLibInTargetDir" AfterTargets="Build">
+    <ItemGroup>
+      <None Include="$(TargetDir)\ElvisModifiersLib.dll">
+        <Pack>true</Pack>
+        <PackagePath>lib/netstandard2.0</PackagePath>
+      </None>
+    </ItemGroup>
+  </Target>-->  
+  
+</Project>
