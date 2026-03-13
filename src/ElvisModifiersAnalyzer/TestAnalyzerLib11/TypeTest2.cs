@@ -16,7 +16,11 @@ file class Me
 file class MyFriend
 {
     [Alias(Me.InvokeMul)]
-    public void CanInvoke1(in Me me, int mul) => me.Method1(); // ok
+    public void CanInvoke1(in Me me, int mul)
+    {
+        me.Method1(); // ok
+        var m = /*EA_PROP_001*/ me.Money;
+    }
     public void CanInvoke2(in Me me) => /*EA_TYPE_001*/ me.Method2(); // err
     public void CantInvoke(in Me me) => /*EA_TYPE_001*/ me.Method1(); // err
 

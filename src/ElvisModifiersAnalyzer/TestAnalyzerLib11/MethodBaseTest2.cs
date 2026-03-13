@@ -4,7 +4,9 @@ file class Me
 {
     public decimal Money { get; private set; } = 100;
 
-    [OnlyYou<MyFriend1>(nameof(MyFriend1.AcceptMoney))]
+    [OnlyYou<MyFriend1>(nameof(MyFriend1.AcceptMoney)
+                      , nameof(MyFriend1.Property)
+                      , nameof(MyFriend1.Field))]
     [OnlyYou<MyFriend2>(nameof(MyFriend2.AcceptMoney))]
     public decimal TakeMyHalfMoney() {
         decimal half = Money / 2;
@@ -19,6 +21,66 @@ file class MyFriend1
     public void CantAcceptMoney(in Me me)
         => Money += /*EA_METH_001*/ me.TakeMyHalfMoney(); // err
     public decimal Money { get; private set; } = -40;
+
+
+    private Me _me = null!;
+
+    static Me _Me = null!;
+
+    public MyFriend1()
+    {
+        /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+        /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
+    }
+
+    public void CantAcceptMoney1()
+    {
+        var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+        /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
+    }
+
+    private decimal _field = /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
+
+    public decimal Field = _Me.TakeMyHalfMoney(); // ok
+
+    public decimal Property
+    {
+        get {
+            var m = _me.TakeMyHalfMoney(); // ok
+            m = _Me.TakeMyHalfMoney(); // ok
+            return 0;
+        }            
+        set {
+            var m = _me.TakeMyHalfMoney(); // ok
+            m = _Me.TakeMyHalfMoney(); // ok
+        }
+    }
+
+    public decimal Property1
+    {
+        get {
+            var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+            m = /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
+            return 0;
+        }
+        set {
+            var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+            m = /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
+        }
+    }
+
+    public decimal this[int index]
+    {
+        get {
+            var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+            m = /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
+            return 0;
+        }
+        set {
+            var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+            m = /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
+        }
+    }
 }
 
 file class MyFriend2
@@ -31,4 +93,25 @@ file class MyFriend2
     public void CantAcceptMoney2()
         => Money += /*EA_METH_001*/ me2.TakeMyHalfMoney(); // err
     public decimal Money { get; private set; } = -40;
+
+
+    private Me _me = null!;
+
+    public void CantAcceptMoney1()
+    {
+        var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+    }
+
+    private decimal _Property;
+    public decimal Property
+    {
+        get {
+            var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+            return _Property;
+        }
+        set {
+            var m = /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
+            _Property = value;
+        }
+    }
 }

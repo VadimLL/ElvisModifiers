@@ -3,6 +3,7 @@
 
 //#define LAUNCH_DEBUGGER
 //#define INJECT_ATTR
+//#define STRICT_OU // !!!
 
 //extern alias EML;
 
@@ -16,6 +17,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
+using E = ElvisAttributes;
 //using static ElvisAttributes;
 using static DebugHelper;
 
@@ -75,35 +77,44 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
 
         context.RegisterSyntaxNodeAction(analyzeInvocation, SyntaxKind.InvocationExpression);
 
+        context.RegisterSyntaxNodeAction(analyzeIndexer, SyntaxKind.ElementAccessExpression);
+
         context.RegisterSyntaxNodeAction(analyzeSimpleMemberAccess, SyntaxKind.SimpleMemberAccessExpression);
 
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.SimpleAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.AddAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.SubtractAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.MultiplyAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.DivideAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.ModuloAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.AndAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.ExclusiveOrAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.OrAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.LeftShiftAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.RightShiftAssignmentExpression);
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.CoalesceAssignmentExpression);
-
-        //context.RegisterSyntaxNodeAction(analyzePrefixUnary, SyntaxKind.PreIncrementExpression);
-        //context.RegisterSyntaxNodeAction(analyzePrefixUnary, SyntaxKind.PreDecrementExpression);
-
-        //context.RegisterSyntaxNodeAction(analyzePostfixUnary, SyntaxKind.PostIncrementExpression);
-        //context.RegisterSyntaxNodeAction(analyzePostfixUnary, SyntaxKind.PostDecrementExpression);
-
-
-        //context.RegisterSyntaxNodeAction(analyzePropertyAssignment, SyntaxKind.FieldExpression);
-        //context.RegisterSyntaxNodeAction(analyzeInvocation, SyntaxKind.IndexExpression);
+        context.RegisterSyntaxNodeAction(analyzeObjectCreation,
+            SyntaxKind.ObjectCreationExpression, SyntaxKind.ImplicitObjectCreationExpression);
     }
 
     #endregion DiagnosticAnalyzer implementation
 
     public const string EA = nameof(EA);
+
+    #region ctorRule
+
+#pragma warning disable RS2008 // Enable analyzer release tracking
+#pragma warning disable RS1032 // Define diagnostic message correctly
+    public const string EA_CTOR = $"{EA}_CTOR";
+    static readonly DiagnosticDescriptor ctorRule = new DiagnosticDescriptor(
+        id: $"{EA_CTOR}_001",
+        title: "Constructor should be a friend",
+        messageFormat: "The '{0}' is not a friend for the '{1}' member.",
+        category: "Usage",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "The constructor should be a friend.");
+#pragma warning restore RS2008 // Enable analyzer release tracking
+#pragma warning restore RS1032 // Define diagnostic message correctly
+
+    static void analyzeObjectCreation(SyntaxNodeAnalysisContext context)
+    {
+        var objectCreation = (BaseObjectCreationExpressionSyntax)context.Node;
+        var symbolInfo = context.SemanticModel.GetSymbolInfo(objectCreation);
+        var ctorSymbol = symbolInfo.Symbol as IMethodSymbol
+            ?? symbolInfo.CandidateSymbols.OfType<IMethodSymbol>().FirstOrDefault();
+        analyzeOperation(context, methodRule, ctorSymbol, objectCreation);
+    }
+
+    #endregion ctorRule
 
     #region methodRule
 
@@ -124,15 +135,24 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
     static void analyzeInvocation(SyntaxNodeAnalysisContext context)
     {
         var invocation = (InvocationExpressionSyntax)context.Node;
-        if (invocation.ToString().StartsWith("base."))
-        {
-            return;
-        }
+        //if (invocation.ToString().StartsWith("base."))
+        //{
+        //    return;
+        //}
 
         var symbolInfo = context.SemanticModel.GetSymbolInfo(invocation);
         var methodSymbol = symbolInfo.Symbol as IMethodSymbol
             ?? symbolInfo.CandidateSymbols.OfType<IMethodSymbol>().FirstOrDefault();       
         analyzeOperation(context, methodRule, methodSymbol, invocation);
+    }
+
+    static void analyzeIndexer(SyntaxNodeAnalysisContext context)
+    {
+        var indexer = (ElementAccessExpressionSyntax)context.Node;
+        var symbolInfo = context.SemanticModel.GetSymbolInfo(indexer);
+        //var methodSymbol = symbolInfo.Symbol as IMethodSymbol
+        //    ?? symbolInfo.CandidateSymbols.OfType<IMethodSymbol>().FirstOrDefault();
+        analyzeOperation(context, methodRule, symbolInfo.Symbol, indexer);
     }
 
     #endregion methodRule
@@ -162,7 +182,6 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
 #pragma warning restore RS2008 // Enable analyzer release tracking
 #pragma warning restore RS1032 // Define diagnostic message correctly
 
-    //SimpleMemberAccess
     static void analyzeSimpleMemberAccess(SyntaxNodeAnalysisContext context)
     {
         var access = (MemberAccessExpressionSyntax) context.Node;
@@ -198,24 +217,6 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
         analyzePropertyAccess(propertyRule, context, access);
     }
 
-    //static void analyzePropertyAssignment(SyntaxNodeAnalysisContext context)
-    //{
-    //    var assignment = context.Node as AssignmentExpressionSyntax;
-    //    analyzePropertyAccess(propertyRule, context, assignment?.Left as MemberAccessExpressionSyntax);
-    //}
-
-    //static void analyzePrefixUnary(SyntaxNodeAnalysisContext context)
-    //{
-    //    var prefixUnary = (PrefixUnaryExpressionSyntax)context.Node;
-    //    analyzePropertyAccess(propertyRule, context, prefixUnary.Operand as MemberAccessExpressionSyntax);
-    //}
-
-    //static void analyzePostfixUnary(SyntaxNodeAnalysisContext context)
-    //{
-    //    var postfixUnary = (PostfixUnaryExpressionSyntax)context.Node;
-    //    analyzePropertyAccess(propertyRule, context, postfixUnary.Operand as MemberAccessExpressionSyntax);
-    //}
-
     static bool analyzePropertyAccess(
         in DiagnosticDescriptor rule,
         in SyntaxNodeAnalysisContext context,
@@ -228,9 +229,18 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
         }
 
         var symbolInfo = context.SemanticModel.GetSymbolInfo(memberAccess);
-        var propertySymbol = symbolInfo.Symbol as IPropertySymbol
-            ?? symbolInfo.CandidateSymbols.OfType<IPropertySymbol>().FirstOrDefault();
-        return analyzeOperation(context, rule, propertySymbol, memberAccess, isSet);
+        if (symbolInfo.Symbol is IPropertySymbol or IFieldSymbol or IEventSymbol)
+        {
+            if (symbolInfo.Symbol is IFieldSymbol fieldSymbol && fieldSymbol.IsConst)
+            //!!! in the future better use Exclude attribute (not implemented yet) for constant
+            {
+                return false;
+            }
+
+            return analyzeOperation(context, rule, symbolInfo.Symbol, memberAccess, isSet);
+        }
+
+        return false;
     }
 
     #endregion propertyRule
@@ -270,11 +280,11 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
     static readonly DiagnosticDescriptor attributeRule = new DiagnosticDescriptor(
         id: "EA_ATTR_001",
         title: "Attributes conflict",
-        messageFormat: $"Not allowed to apply '{ElvisAttributes.OnlyYouAttribute}' and '{ElvisAttributes.OnlyAliasAttribute}' attributes at the same time.",
+        messageFormat: $"Not allowed to apply '{E.OnlyYouAttribute}' and '{E.OnlyAliasAttribute}' attributes at the same time.",
         category: "Usage",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: $"Not allowed to apply '{ElvisAttributes.OnlyYouAttribute}' and '{ElvisAttributes.OnlyAliasAttribute}' attributes at the same time.");
+        description: $"Not allowed to apply '{E.OnlyYouAttribute}' and '{E.OnlyAliasAttribute}' attributes at the same time.");
 #pragma warning restore RS2008 // Enable analyzer release tracking
 #pragma warning restore RS1032 // Define diagnostic message correctly
 
@@ -289,38 +299,6 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
         in SyntaxNode operationNode,
         in bool isSet = false)
     {
-        static OuterInfo? getOuterInfo(
-                in SyntaxNodeAnalysisContext context,
-                in ISymbol symbol,
-                in SyntaxNode operationNode)
-        {
-            if (operationNode.Parent.SearchInParent(static n => n is MethodDeclarationSyntax)
-                is not MethodDeclarationSyntax outerMethod)
-            {
-                return null;
-            }
-
-            if (outerMethod.Parent.SearchInParent(static n => n is ClassDeclarationSyntax)
-                is not ClassDeclarationSyntax outerClass)
-            {
-                return null;
-            }
-
-            // scan base types: (instead of StartsWith("base.") and etc.)
-            //foreach (INamedTypeSymbol t in context.SemanticModel.GetDeclaredSymbol(outerClass).GetAllBaseTypes())
-            //{
-            //}
-
-            INamedTypeSymbol? outerClassSymbol = context.SemanticModel.GetDeclaredSymbol(outerClass);
-            // allow a call inside the same class:
-            if (ReferenceEquals(symbol.ContainingType, outerClassSymbol))
-            {
-                return null;
-            }
-
-            return new OuterInfo(outerMethod, outerClass, outerClassSymbol!);
-        }
-
         static bool analyzeOperation(
             in SyntaxNodeAnalysisContext context,
             in DiagnosticDescriptor rule,
@@ -331,26 +309,44 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             in bool isSet,
             params object?[]? messageArgs)
         {
-            (MethodDeclarationSyntax outerMethod,
+            (MemberDeclarationSyntax outerMember,
              ClassDeclarationSyntax outerClass,
              INamedTypeSymbol outerClassSymbol) = outerInfo;
 
             bool isMethod = symbol is IMethodSymbol;
             bool hasOnlySetAttr = oAttrs.Any(static a =>
-                a.AttributeClass?.Name is ElvisAttributes.OnlyYouSetAttribute or ElvisAttributes.OnlyAliasSetAttribute);
+                a.AttributeClass?.Name is E.OnlyYouSetAttribute or E.OnlyAliasSetAttribute);
             if (!isMethod && !isSet && hasOnlySetAttr)
             {
+                // All can read [OnlySet*] property
                 return false;
             }
+
+            var outerClassInterfaces = outerClassSymbol.AllInterfaces.ToList();
+            var outerType = outerClassSymbol.IsGenericType
+                ? outerClassSymbol.OriginalDefinition
+                : outerClassSymbol;
 
             IEnumerable<(AttributeData AttrData, bool IsGeneric, INamedTypeSymbol AttrSymbol)>
             oAttrsInfos = oAttrs
                 .Where(a => {
-                    // select only that O<T> attributes where T == outerClass
+                    // select only that O*<T> attributes where T == outerClass
                     var attributeClass = a.AttributeClass!;
-                    return attributeClass.IsGenericType
-                        ? SymbolEqualityComparer.Default.Equals(attributeClass.TypeArguments.First(), outerClassSymbol)
-                        : ReferenceEquals(a.ConstructorArguments[0].Value, outerClassSymbol);
+                    if (attributeClass.IsGenericType)
+                    {
+                        return SymbolEqualityComparer.Default.Equals(attributeClass.TypeArguments.First(), outerClassSymbol)
+                        || outerClassInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(attributeClass.TypeArguments.First(), i));
+                    }
+
+                    var type = a.ConstructorArguments[0].Value as INamedTypeSymbol;
+                    if (type is null)
+                    {
+                        return false;
+                    }
+
+                    type = type.IsGenericType ? type.OriginalDefinition : type;
+                    return SymbolEqualityComparer.Default.Equals(type, outerType)
+                    || outerClassInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(type, i));
                 })
                 .Select(a => (a, a.AttributeClass!.IsGenericType, a.AttributeClass!));
 
@@ -370,16 +366,16 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             }
 
             bool isAllowByOU = true; // is allow (by ouAttrsInfos) to invoke our member (symbol)?
-            string outerMethodName = outerMethod.Identifier.Text;
+            string outerMemberName = outerMember.GetName();
 
             // select [OnlyYou(Set)] attributes (OU)
             var ouAttrsInfos = isMethod || !isSet
-                ? oAttrsInfos.Where(static a => a.AttrSymbol?.Name == ElvisAttributes.OnlyYouAttribute)
-                : oAttrsInfos.Where(static a => a.AttrSymbol?.Name is ElvisAttributes.OnlyYouAttribute or ElvisAttributes.OnlyYouSetAttribute);
+                ? oAttrsInfos.Where(static a => a.AttrSymbol?.Name == E.OnlyYouAttribute)
+                : oAttrsInfos.Where(static a => a.AttrSymbol?.Name is E.OnlyYouAttribute or E.OnlyYouSetAttribute);
             if (ouAttrsInfos.SelectMany(static a => a.IsGeneric
                         ? a.AttrData.ConstructorArguments[0].Values
                         : a.AttrData.ConstructorArguments[1].Values)
-                    .All(v => v.Value?.ToString() != outerMethodName))
+                    .All(v => v.Value?.ToString() != outerMemberName))
             {
                 isAllowByOU = false;
             }
@@ -390,8 +386,8 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             {
                 // select [OnlyAlias(Set)] attributes (OA)
                 var oaAttrInfos = isMethod || !isSet
-                    ? oAttrsInfos.Where(static a => a.AttrSymbol?.Name == ElvisAttributes.OnlyAliasAttribute)
-                    : oAttrsInfos.Where(static a => a.AttrSymbol?.Name is ElvisAttributes.OnlyAliasAttribute or ElvisAttributes.OnlyAliasSetAttribute);
+                    ? oAttrsInfos.Where(static a => a.AttrSymbol?.Name == E.OnlyAliasAttribute)
+                    : oAttrsInfos.Where(static a => a.AttrSymbol?.Name is E.OnlyAliasAttribute or E.OnlyAliasSetAttribute);
                 if (oaAttrInfos.Count() == 0)
                 {
                     isAllowByOA = false;
@@ -405,23 +401,31 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
                         : a.AttrData.ConstructorArguments[1].Values)
                     .Select(a => a.Value?.ToString())
                     .Where(a => a is not null);
-                if (outerMethod.AttributeLists.Count == 0)
+
+                var outerInterfaceMethod = context.SemanticModel.GetDeclaredSymbol(outerMember)?.FindInterfaceMember();
+                if (outerMember.AttributeLists.Count == 0 && outerInterfaceMethod is null)
                 {
                     isAllowByOA = false;
                     break;
                 }
 
                 // [Alias(methodAlias)]
-                // get [Alias] attribute for outerMethod
+                // get [Alias] attribute for outerMember
                 var aliasAttr = context.SemanticModel
-                    .GetDeclaredSymbol(outerMethod)?
+                    .GetDeclaredSymbol(outerMember)?
                     .GetAttributes()
-                    .Where(static a => a.AttributeClass?.Name is ElvisAttributes.AliasAttribute)
+                    .Where(static a => a.AttributeClass?.Name is E.AliasAttribute)
                     .FirstOrDefault();
                 if (aliasAttr is null)
                 {
-                    isAllowByOA = false;
-                    break;
+                    aliasAttr = outerInterfaceMethod?.GetAttributes()
+                        .Where(static a => a.AttributeClass?.Name is E.AliasAttribute)
+                        .FirstOrDefault();
+                    if (aliasAttr is null)
+                    {
+                        isAllowByOA = false;
+                        break;
+                    }
                 }
 
                 string methodAlias = aliasAttr.ConstructorArguments.First().Value!.ToString();
@@ -450,23 +454,18 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        var outerInfo = getOuterInfo(context, symbol, operationNode);
+        var outerInfo = OuterInfo.Get(context, symbol, operationNode);
         if (outerInfo is null)
         {
             return false;
         }
 
-        // scan base types: (instead of StartsWith("base.") and etc.)
-        //foreach (INamedTypeSymbol t in context.SemanticModel.GetDeclaredSymbol(outerClass).GetAllBaseTypes())
-        //{
-        //}
-
         // get o-attributes on class (potential attractor)
         var oAttrsOnClass = symbol.ContainingType.GetAttributes()
-            .Where(static a => a.AttributeClass?.Name is ElvisAttributes.OnlyYouAttribute
-                                                      or ElvisAttributes.OnlyAliasAttribute
-                                                      or ElvisAttributes.OnlyYouSetAttribute
-                                                      or ElvisAttributes.OnlyAliasSetAttribute)
+            .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                      or E.OnlyAliasAttribute
+                                                      or E.OnlyYouSetAttribute
+                                                      or E.OnlyAliasSetAttribute)
             .ToList();
         if (oAttrsOnClass.Count() > 0) // => realy attractor
         {
@@ -484,7 +483,7 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
              */
             bool isMethod = symbol is IMethodSymbol;
             bool hasOnlySetAttr = oAttrsOnClass.Any(static a =>
-                a.AttributeClass?.Name is ElvisAttributes.OnlyYouSetAttribute or ElvisAttributes.OnlyAliasSetAttribute);
+                a.AttributeClass?.Name is E.OnlyYouSetAttribute or E.OnlyAliasSetAttribute);
             if (analyzeOperation(
                 context,
                 !isMethod && hasOnlySetAttr ? setTypeRule : typeRule,
@@ -493,7 +492,7 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
                 operationNode,
                 oAttrsOnClass,
                 isSet,
-                outerInfo.OuterMethod.Identifier.Text, symbol.ContainingType.Name))
+                outerInfo.OuterMember.GetName(), symbol.ContainingType.Name))
             {
                 return true;
             }
@@ -511,11 +510,23 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
          */
         // get o-attributes on member (member of potential attractor)
         var oAttrsOnMember = symbol.GetAttributes()
-            .Where(static a => a.AttributeClass?.Name is ElvisAttributes.OnlyYouAttribute
-                                                      or ElvisAttributes.OnlyAliasAttribute
-                                                      or ElvisAttributes.OnlyYouSetAttribute
-                                                      or ElvisAttributes.OnlyAliasSetAttribute)
+            .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                      or E.OnlyAliasAttribute
+                                                      or E.OnlyYouSetAttribute
+                                                      or E.OnlyAliasSetAttribute)
             .ToList();
+
+        var interfaceMember = symbol.FindInterfaceMember();
+        if (interfaceMember is not null)
+        {
+            // get o-attributes on interface member (member of potential attractor-interface)
+            var oAttrsOnInterfaceMember = interfaceMember.GetAttributes()
+                .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                          or E.OnlyAliasAttribute
+                                                          or E.OnlyYouSetAttribute
+                                                          or E.OnlyAliasSetAttribute);
+            oAttrsOnMember.AddRange(oAttrsOnInterfaceMember);
+        }
 
         if (oAttrsOnMember.Count() == 0) // => member doesn't belong to attractor class
         {
@@ -530,7 +541,7 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             operationNode,
             oAttrsOnMember,
             isSet,
-            symbol.Name, outerInfo.OuterMethod.Identifier.Text);
+            symbol.Name, outerInfo.OuterMember.GetName());
     }
 
     static void reportDiagnostic(
@@ -553,32 +564,65 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
 /// <summary>
 /// Let there is some operation (method invocation, get/set property...).<br/>
 /// The OuterInfo contains "outer" information about this operation: <br/>
-/// - in which method (outerMethod) occurs this operation <br/>
-/// - and in which class (outerClass, outerClassSymbol) contains this outerMethod
+/// - in which member (outerMember) occurs this operation <br/>
+/// - and in which class (outerClass, outerClassSymbol) contains this outerMember
 /// </summary>
 file class OuterInfo
 {
     public OuterInfo(
-        in MethodDeclarationSyntax outerMethod,
+        in MemberDeclarationSyntax outerMember,
         in ClassDeclarationSyntax outerClass,
         in INamedTypeSymbol outerClassSymbol)
     {
-        OuterMethod = outerMethod;
+        OuterMember = outerMember;
         OuterClass = outerClass;
         OuterClassSymbol = outerClassSymbol;
     }
 
     public void Deconstruct(
-        out MethodDeclarationSyntax outerMethod,
+        out MemberDeclarationSyntax outerMember,
         out ClassDeclarationSyntax outerClass,
         out INamedTypeSymbol outerClassSymbol)
     {
-        outerMethod = OuterMethod;
+        outerMember = OuterMember;
         outerClass = OuterClass;
         outerClassSymbol = OuterClassSymbol;
     }
 
-    public MethodDeclarationSyntax OuterMethod { get; }
+    public MemberDeclarationSyntax OuterMember { get; }
     public ClassDeclarationSyntax OuterClass { get; }
-    public INamedTypeSymbol OuterClassSymbol { get; }    
+    public INamedTypeSymbol OuterClassSymbol { get; }
+
+    public static OuterInfo? Get(
+            in SyntaxNodeAnalysisContext context,
+            in ISymbol symbol,
+            in SyntaxNode operationNode)
+    {
+        if (operationNode.Parent.SearchInParent(static n => n is MemberDeclarationSyntax)
+            is not MemberDeclarationSyntax outerMember)
+        {
+            return null;
+        }
+
+        if (outerMember.Parent.SearchInParent(static n => n is ClassDeclarationSyntax)
+            is not ClassDeclarationSyntax outerClass)
+        {
+            return null;
+        }
+
+        INamedTypeSymbol? outerClassSymbol = context.SemanticModel.GetDeclaredSymbol(outerClass);
+        if (symbol.ContainingType.GenericCaseEqualTo(outerClassSymbol))
+        {
+            return null;
+        }
+
+#if !STRICT_OU
+        // allow a call inside the dirived classes
+        if (outerClassSymbol?.InheritsFrom(symbol.ContainingType) ?? true)
+        {
+            return null;
+        }
+#endif
+        return new OuterInfo(outerMember, outerClass, outerClassSymbol!);
+    }
 }

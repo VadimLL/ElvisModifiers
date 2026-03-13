@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2025 LeaLan (VadimLL). All rights reserved.
 // License: MIT
 
+//#define CORE_TESTS_ONLY
+
 using Microsoft.CodeAnalysis;
 
 namespace ElvisModifiersAnalyzer.Tests;
@@ -28,7 +30,13 @@ public sealed class Tests
             throw new Exception($"Test project directory ('{testFilesDirectory}') not found");
         }
 
-        foreach (string file in Directory.GetFiles(testFilesDirectory, "*.cs"))
+        foreach (string file in Directory.GetFiles(testFilesDirectory, "*.cs",
+#if CORE_TESTS_ONLY
+            SearchOption.TopDirectoryOnly
+#else
+            SearchOption.AllDirectories
+#endif
+            ))
         {
             yield return [file];
         }

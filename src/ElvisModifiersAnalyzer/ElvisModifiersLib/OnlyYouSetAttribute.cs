@@ -3,26 +3,16 @@
 
 using System;
 
-//namespace ElvisModifiersLib;
+using ElvisModifiersLib; 
 
-[AttributeUsage(
-      AttributeTargets.Class
-    | AttributeTargets.Interface
-    | AttributeTargets.Property
-    | AttributeTargets.Field
-    , AllowMultiple = true)]
+[AttributeUsage(Constants.OnlyYouSetTargets, AllowMultiple = true)]
 public class OnlyYouSetAttribute : Attribute
 {
     public OnlyYouSetAttribute(Type type, params string[] members) { }
 }
 
-// next variant only for C# 11 and above:
-[AttributeUsage(
-      AttributeTargets.Class
-    | AttributeTargets.Interface
-    | AttributeTargets.Property
-    | AttributeTargets.Field
-    , AllowMultiple = true)]
+// variant only for C# 11 and above:
+[AttributeUsage(Constants.OnlyYouSetTargets, AllowMultiple = true)]
 public class OnlyYouSetAttribute<T> : Attribute
 {
     public OnlyYouSetAttribute(params string[] members) { }
@@ -32,24 +22,14 @@ public class OnlyYouSetAttribute<T> : Attribute
 /*-----------------------------------------------------------*/
 
 
-[AttributeUsage(
-      AttributeTargets.Class
-    | AttributeTargets.Interface
-    | AttributeTargets.Property
-    | AttributeTargets.Field
-    , AllowMultiple = true)]
+[AttributeUsage(Constants.OnlyYouSetTargets, AllowMultiple = true)]
 public class OnlyAliasSetAttribute : Attribute
 {
     public OnlyAliasSetAttribute(Type type, params string[] members) { }
 }
 
-// next variant only for C# 11 and above:
-[AttributeUsage(
-      AttributeTargets.Class
-    | AttributeTargets.Interface
-    | AttributeTargets.Property
-    | AttributeTargets.Field
-    , AllowMultiple = true)]
+// variant only for C# 11 and above:
+[AttributeUsage(Constants.OnlyYouSetTargets, AllowMultiple = true)]
 public class OnlyAliasSetAttribute<T> : Attribute
 {
     public OnlyAliasSetAttribute(params string[] members) { }

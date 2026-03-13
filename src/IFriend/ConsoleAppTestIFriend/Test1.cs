@@ -43,7 +43,7 @@ file class MyFriend : Me.IFriend
         decimal half = me.Money / 2;
         Me.IFriend.setMoney(me, half);
         Money += half;
-        //Me.UnsharedMoney = me.Money = 0; // obviously compile err
+        //me.UnsharedMoney = me.Money = 0; // obviously 2 compile errors
     }
 
     public decimal Money { get; private set; } = -40;

@@ -18,6 +18,8 @@ using System;
     | AttributeTargets.Method
     | AttributeTargets.Property
     | AttributeTargets.Field
+    | AttributeTargets.Constructor
+    | AttributeTargets.Event
     , AllowMultiple = true)]
 public class {OnlyYouAttribute} : Attribute
 {{
@@ -30,6 +32,8 @@ public class {OnlyYouAttribute} : Attribute
     | AttributeTargets.Method
     | AttributeTargets.Property
     | AttributeTargets.Field
+    | AttributeTargets.Constructor
+    | AttributeTargets.Event
     , AllowMultiple = true)]
 public class {OnlyAliasAttribute} : Attribute
 {{
@@ -52,6 +56,8 @@ public class {AliasAttribute} : Attribute
     | AttributeTargets.Method
     | AttributeTargets.Property
     | AttributeTargets.Field
+    | AttributeTargets.Constructor
+    | AttributeTargets.Event
     , AllowMultiple = true)]
 public class {OnlyYouAttribute}<T> : Attribute
 {{
@@ -64,6 +70,8 @@ public class {OnlyYouAttribute}<T> : Attribute
     | AttributeTargets.Method
     | AttributeTargets.Property
     | AttributeTargets.Field
+    | AttributeTargets.Constructor
+    | AttributeTargets.Event
     , AllowMultiple = true)]
 public class {OnlyAliasAttribute}<T> : Attribute
 {{

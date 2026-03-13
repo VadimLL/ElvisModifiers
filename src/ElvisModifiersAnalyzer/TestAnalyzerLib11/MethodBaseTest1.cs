@@ -13,15 +13,33 @@ file class Me
         return half;
     }
 
+    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+    public decimal this[int index]
+    {
+        get => Money + index;
+        set => Money = value - index;
+    }
+
     public void SelfAcceptMoney() => Money += TakeMyHalfMoney(); // ok
 }
 
 file class MyFriend
 {
-    public void AcceptMoney(in Me me) => Money += me.TakeMyHalfMoney(); // ok
+    public void AcceptMoney(in Me me)
+    {
+        Money += me.TakeMyHalfMoney(); // ok
+        var m0 = me[0];
+    }
     public void CantAcceptMoney(in Me me)
-        => Money += /*EA_METH_001*/ me.TakeMyHalfMoney(); // err
-    public void AcceptMoneyFromNotMe(in NotMe me) => Money += me.TakeMyMoney(); // ok
+    { 
+        //Money += /*EA_METH_001*/ me.TakeMyHalfMoney(); // err
+        var m0 = /*EA_METH_001*/ me[0];
+        /*EA_METH_001*/ me[0] = 0;
+    }
+    public void AcceptMoneyFromNotMe(in NotMe me)
+    {
+        Money += me.TakeMyMoney(); // ok
+    }
     public decimal Money { get; private set; } = -40;
 }
 

@@ -5,7 +5,7 @@ using System;
 
 //namespace ElvisModifiersLib;
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, AllowMultiple = true)]
 public class AliasAttribute : Attribute
 {
     public AliasAttribute(string alias) { }

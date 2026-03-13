@@ -29,7 +29,7 @@ file class MyFriend
     }
     public void CantAcceptMoney(in Me me)
     {
-        Money += me.TakeMyHalfMoney(); // err? not emplemented !!! is it necessary?
+        Money += /*EA_METH_001*/ me.TakeMyHalfMoney(); // err
         /*EA_METH_001*/ IMe.StaticMethod(); // err
     }
     public decimal Money { get; private set; } = -40;

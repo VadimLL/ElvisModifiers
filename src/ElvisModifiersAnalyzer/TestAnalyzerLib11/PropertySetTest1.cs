@@ -12,6 +12,10 @@ file class Me
     
     [OnlyAliasSet<MyFriend>(SetMoney2)]
     public decimal Money2 { get; set; } = 100;
+
+    [OnlyYouSet<MyFriend>(nameof(MyFriend.SetMoney1))]
+    public decimal MoneyF = 100;
+
 }
 
 file class MyFriend
@@ -25,6 +29,9 @@ file class MyFriend
         me.Money1++;
 
         Me.GlobalMoney = 100;
+
+        half = me.MoneyF;
+        ++me.MoneyF;
     }
 
     [Alias(Me.SetMoney2)]
@@ -45,6 +52,9 @@ file class MyFriend
 
         half = Me.GlobalMoney / 2; // ok
         /*EA_PROP_002*/ Me.GlobalMoney = 100; // err
+
+        half = me.MoneyF; // ok
+        /*EA_PROP_002*/ ++me.MoneyF;
     }
 
     public void CantSetMoney(in Me me)

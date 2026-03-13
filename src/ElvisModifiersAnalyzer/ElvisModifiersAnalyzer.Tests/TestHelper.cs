@@ -17,7 +17,10 @@ internal static class TestHelper
     static readonly string ElvisModifiersLibPath = MetadataReference.CreateFromFile(typeof(OnlyYouAttribute).Assembly.Location).FilePath!;
 
     static readonly Regex rulePrefixRegex = new Regex(@$"/\*{ElvisModifiersAnalyzer.EA}_", RegexOptions.Compiled);
-    static readonly Regex endExpRegex = new Regex(@"\s*[;=/\+\-\*\|]", RegexOptions.Compiled);
+    static readonly Regex endExpRegex = new Regex(@"\s*[;=/\+\-\*\|\[]", RegexOptions.Compiled);
+    const string identifier = @"([^\W\d_]|_)+[\w]*";
+    //const string complexIdr = @$"{identifier}(\.{identifier})*";
+    static readonly Regex indexerRegex = new Regex(@$"{identifier}\[", RegexOptions.Compiled);
 
     static TestInfo getTestInfo(in string testCode)
     {
@@ -42,7 +45,15 @@ internal static class TestHelper
             int parentheses = 0;
             if (ruleId.StartsWith(ElvisModifiersAnalyzer.EA_METH))
             {
-                end_exp = testCode.IndexOf(";", end_rule);
+                int end_line = testCode.IndexOf(Environment.NewLine, end_rule);
+                if (indexerRegex.Match(testCode, end_rule + 1, end_line - end_rule).Success)
+                {
+                    end_exp = testCode.IndexOf("]", end_rule) + 1;
+                }
+                else
+                {
+                    end_exp = testCode.IndexOf(";", end_rule);
+                }
             }
             else if (ruleId.StartsWith(ElvisModifiersAnalyzer.EA_PROP)
                   || ruleId.StartsWith(ElvisModifiersAnalyzer.EA_TYPE))
@@ -150,7 +161,10 @@ internal static class TestHelper
         }
 
         sb.Append(code11.Substring(tail_i));
-        return sb.Replace("file class", "class").ToString();
+        return sb
+            .Replace("file interface", "interface")
+            .Replace("file abstract class", "abstract class")
+            .Replace("file class", "class").ToString();
     }
 }
 

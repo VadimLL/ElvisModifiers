@@ -17,7 +17,7 @@
   <PropertyGroup>
     
     <PackageId>ElvisModifiers.Analyzer</PackageId>
-    <PackageVersion>1.0.1</PackageVersion>
+    <PackageVersion>1.0.4</PackageVersion>
     <Copyright>Copyright (c) LeaLan (VadimLL)</Copyright>    
     <Authors>LeaLan (VadimLL)</Authors>
     <AssemblyName>ElvisModifiers.Analyzer</AssemblyName>
@@ -61,7 +61,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     
-    <PackageReference Include="ElvisModifiersLib" Version="1.0.0">
+    <PackageReference Include="ElvisModifiersLib" Version="1.0.2">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>  
   </ItemGroup>
