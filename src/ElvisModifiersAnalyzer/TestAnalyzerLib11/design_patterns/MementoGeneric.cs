@@ -1,34 +1,34 @@
-﻿// Шаблон "Снимок/Хранитель" (Memento) generic версия
+﻿// Memento pattern (generic version)
 
 using System.Collections.Generic;
 
 namespace TestAnalyzerLib11;
 
 [OnlyYou(typeof(Originator<>))]
-file class Memento<T> // Снимок/Хранитель
+file class Memento<T>
 {
-    // Только Originator может создавать Memento
+    // Only Originator can create Memento
     public Memento(T state) => State = state;
 
-    // Только Originator может читать состояние
+    // Only Originator can read state
     public T State { get; }
 }
 
-file class Originator<T>  // Создатель
+file class Originator<T>
 {
     public T State { get; set; } = default!;
 
-    // Только Caretaker может создавать Снимок
+    // Only Caretaker can create Memento
     [OnlyYou(typeof(Caretaker<>))]
     public Memento<T> Save() => new Memento<T>(State);
 
-    // Только Caretaker может восстанавливать Снимок
+    // Only Caretaker can restore Memento
     [OnlyYou(typeof(Caretaker<>))]
     public void Restore(Memento<T> memento) => State = memento.State;
 }
 
-// Может хранить Memento, но не может читать или изменять его
-file class Caretaker<T> // Опекун
+// Caretaker can store Memento, but cannot read or modify it
+file class Caretaker<T>
 {
     private Stack<Memento<T>> _history = new ();
     public void SaveState(Originator<T> originator) => _history.Push(originator.Save());
@@ -39,12 +39,12 @@ file class Caretaker<T> // Опекун
             var memento = _history.Pop();
             originator.Restore(memento);
 
-            var state = /*EA_TYPE_001*/ memento.State; // ОШИБКА компиляции! Caretaker не Originator
+            var state = /*EA_TYPE_001*/ memento.State; // Compilation error! Caretaker is not Originator
         }
     }
 }
 
-// Использование
+// Usage
 class Program
 {
     static void Main()
@@ -55,12 +55,12 @@ class Program
         origin.State = "A";
         care.SaveState(origin);
         origin.State = "B";
-        care.Undo(origin); // Восстановит состояние "A"
+        care.Undo(origin); // Restore the "A" state
 
-        // Но:
-        var memento = /*EA_METH_001*/ origin.Save(); // ОШИБКА компиляции!
-        var state = /*EA_TYPE_001*/ memento.State; // ОШИБКА компиляции!
-        memento = /*EA_TYPE_001*/ new Memento<string>("bad state"); // ОШИБКА компиляции!
+        // But:
+        var memento = /*EA_METH_001*/ origin.Save(); // Compilation error!
+        var state = /*EA_TYPE_001*/ memento.State; // Compilation error!
+        memento = /*EA_TYPE_001*/ new Memento<string>("bad state"); // Compilation error!
     }
 }
 

@@ -1,12 +1,10 @@
-﻿/// <summary>
-/// Пример решения шаблона проектирования State с модификатором:
-/// </summary>
+﻿// State pattern
 
 namespace TestAnalyzerLib11;
 
 using System;
 
-// Банковский счет - контекст
+// Bank account - context
 class BankAccount
 {
     private IAccountState _state;
@@ -17,7 +15,7 @@ class BankAccount
         _state = new ActiveState(this);
     }
 
-    // Только классы состояний могут менять состояние счета
+    // Only state classes can change the account state
     [OnlyYou<IAccountState>]
     public void SetState(IAccountState newState)
     {
@@ -25,21 +23,21 @@ class BankAccount
         Console.WriteLine($"Состояние изменено на {newState.GetType().Name}");
     }
 
-    // Только классы состояний могут изменять баланс
+    // Only state classes can change the balance
     [OnlyYou<IAccountState>]
     public void UpdateBalance(decimal amount)
     {
         Balance += amount;
     }
 
-    // Публичные методы - интерфейс для клиентов
+    // Public methods - interface for clients
     public void Deposit(decimal amount) => _state.Deposit(amount);
     public void Withdraw(decimal amount) => _state.Withdraw(amount);
     public void Freeze() => _state.Freeze();
     public void Close() => _state.Close();
 }
 
-// Интерфейс состояния
+// State interface
 interface IAccountState
 {
     void Deposit(decimal amount);
@@ -48,7 +46,7 @@ interface IAccountState
     void Close();
 }
 
-// Активное состояние
+// Active state
 class ActiveState : IAccountState
 {
     private BankAccount _account;
@@ -60,7 +58,7 @@ class ActiveState : IAccountState
 
     public void Deposit(decimal amount)
     {
-        // Может обновлять баланс, потому что разрешено модификатором
+        // Can update the balance because it is allowed by the Elvis-modifier
         _account.UpdateBalance(amount);
         Console.WriteLine($"Внесено {amount}, баланс: {_account.Balance}");
     }
@@ -72,7 +70,7 @@ class ActiveState : IAccountState
     public void Close() { }
 }
 
-// Замороженное состояние
+// Frozen state
 class FrozenState : IAccountState
 {
     public FrozenState(BankAccount account) { }
@@ -82,7 +80,7 @@ class FrozenState : IAccountState
     public void Withdraw(decimal amount) { }
 }
 
-// Закрытое состояние
+// Closed state
 class ClosedState : IAccountState
 {
     public void Close() { }
@@ -91,61 +89,60 @@ class ClosedState : IAccountState
     public void Withdraw(decimal amount) { }
 }
 
-// Контролируемый переход состояний:
+// Controlled state changing:
 class FraudDetectionService
 {
     public void CheckForFraud(BankAccount account)
     {
-        // ОШИБКА КОМПИЛЯЦИИ! Нельзя напрямую менять состояние
+        // Compilation error! You can't change the state directly
         /*EA_METH_001*/ account.SetState(new FrozenState(account));
 
-        // Только через публичный интерфейс
-        account.Freeze(); // Правильно - через бизнес-логику
+        // Only via public interface
+        account.Freeze(); // That's right - via business logic
     }
 }
 
-// Безопасное изменение внутренних данных:
+// Safe modification of internal data:
 class ExternalService
 {
     public void ProcessPayment(BankAccount account)
     {
-        // ОШИБКА КОМПИЛЯЦИИ! Нельзя напрямую менять баланс
+        // Compilation error! You can't change the balance directly
         /*EA_METH_001*/ account.UpdateBalance(1000);
 
-        // Только через методы состояния
-        account.Deposit(1000); // Правильно
+        // Only via state methods
+        account.Deposit(1000); // That's right
     }
 }
 
 
-// Сценарий использования:
+// Usage scenario:
 file class Program
 {
     static void Main()
     {
         var account = new BankAccount();
 
-        // Клиентский код - работает с публичным интерфейсом
-        account.Deposit(1000); // Внесено 1000, баланс: 1000
-        account.Withdraw(500); // Снято 500, баланс: 500
+        // Client code - works with the public interface
+        account.Deposit(1000); // Deposit 1000, balance: 1000
+        account.Withdraw(500); // Withdraw 500, balance: 500
 
-        // Система безопасности решает заморозить счет
-        account.Freeze(); // Счет заморожен
+        // The security system decides to freeze the account
+        account.Freeze(); // Account frozen
 
-        // Попытка снять деньги
-        account.Withdraw(100); // Невозможно снять средства - счет заморожен
+        // Trying to withdraw money
+        account.Withdraw(100); // It is impossible to withdraw funds - the account is frozen
 
-        // Внести все еще можно
-        account.Deposit(200); // Внесено на замороженный счет 200, баланс: 700
+        // You can still deposit
+        account.Deposit(200); // Deposited to frozen account 200, balance: 700
 
-        // После разбирательства счет закрывают
-        account.Close(); // Счет закрыт
+        // After the investigation the account is closed
+        account.Close(); // Account closed
 
-        // Дальнейшие операции невозможны
-        account.Withdraw(100); // Невозможно снять средства - счет закрыт
+        // No further operations are possible
+        account.Withdraw(100); // Unable to withdraw funds - account is closed
 
-        // НО! Никто не может случайно "разморозить" счет,
-        // минуя бизнес-логику
-        /*EA_METH_001*/ account.SetState(new ActiveState(account)); // Ошибка компиляции!
+        // But! No one can accidentally "unfreeze" an account, bypassing the business logic.
+        /*EA_METH_001*/ account.SetState(new ActiveState(account)); // Compilation error!
     }
 }

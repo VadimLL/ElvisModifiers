@@ -1,25 +1,25 @@
-﻿// Шаблон Строитель (Builder)
+﻿// Builder pattern
 
 using System;
 using System.Collections.Generic;
 
 namespace TestAnalyzerLib11;
 
-// Только строитель может устанавливать свойства
+// Only the builder can set properties
 [OnlyYouSet<PizzaBuilder>]
 file class Pizza
 {
     readonly List<string> _Toppings = new();
     public IEnumerable<string> Toppings => _Toppings;
 
-    // Только строитель может создавать пиццу
+    // Only the builder can create pizza
     [OnlyYou<PizzaBuilder>]
     public Pizza() { }
 
     public string Dough { get; set; } = "Default";    
     public string Sauce { get; set; } = "Default";
 
-    // Только строитель может добавлять
+    // Only the builder can add
     [OnlyYou<PizzaBuilder>]
     public void AddToppings(string topping) => _Toppings.Add(topping);
 
@@ -31,7 +31,7 @@ file class PizzaBuilder
 {
     Pizza _pizza = new Pizza();
 
-    // Только директор может устанавливать ингредиенты
+    // Only the director can set the ingredients
     [OnlyYou<PizzaDirector>]
     public void SetDough(string dough)
     {
@@ -51,24 +51,24 @@ file class PizzaBuilder
     }
 
     //[Exclude]
-    // Доступен всем - получить результат можно всегда
+    // Available to everyone - you can always get results
     public Pizza Build() => _pizza;
 }
 
-// Директор - единственный, кто может управлять строителем
+// The director is the only one who can manage the builder
 file class PizzaDirector
 {
     private PizzaBuilder _builder;
 
     public PizzaDirector(PizzaBuilder builder)
     {
-        // Директор получает строителя и теперь только он им управляет
+        // The director gets the builder and now only one manages the builder
         _builder = builder;
     }
 
     public void MakeMargherita()
     {
-        // РАЗРЕШЕНО - мы внутри PizzaDirector
+        // Allowed - we are inside PizzaDirector
         _builder.SetDough("thin");
         _builder.SetSauce("tomato");
         _builder.AddTopping("mozzarella");
@@ -77,7 +77,7 @@ file class PizzaDirector
 
     public void MakePepperoni()
     {
-        // РАЗРЕШЕНО
+        // Allowed
         _builder.SetDough("thick");
         _builder.SetSauce("tomato");
         _builder.AddTopping("pepperoni");
@@ -85,13 +85,13 @@ file class PizzaDirector
     }
 }
 
-// Клиент теперь защищён от случайных ошибок
+// The client is now protected from accidental errors
 file class Client
 {
     void OrderPizza()
     {
-        var try_pizza = /*EA_TYPE_001*/ new Pizza(); // ОШИБКА КОМПИЛЯЦИИ!
-        /*EA_TYPE_002*/ try_pizza.Dough = "Some toxic"; // ОШИБКА КОМПИЛЯЦИИ!
+        var try_pizza = /*EA_TYPE_001*/ new Pizza(); // Compilation error!
+        /*EA_TYPE_002*/ try_pizza.Dough = "Some toxic"; // Compilation error!
 
         var builder = new PizzaBuilder();
         var director = new PizzaDirector(builder);
@@ -99,13 +99,13 @@ file class Client
         director.MakePepperoni();
         var pizza = builder.Build(); // ok
 
-        // но:
-        /*EA_METH_001*/ builder.SetDough("Some toxic"); // ОШИБКА КОМПИЛЯЦИИ!
-        /*EA_METH_001*/ builder.AddTopping("мухамор"); // ОШИБКА КОМПИЛЯЦИИ!
+        // But:
+        /*EA_METH_001*/ builder.SetDough("Some toxic"); // Compilation error!
+        /*EA_METH_001*/ builder.AddTopping("мухамор"); // Compilation error!
 
-        // Клиент может только получить готовый продукт
+        // The client can only get the ready product
         Console.WriteLine($"Got pizza: {pizza.Description}");
-        // и получить (только для чтения) свойства
+        // and get (only for read) properties
         var dough = pizza.Dough; // ok
     }
 }

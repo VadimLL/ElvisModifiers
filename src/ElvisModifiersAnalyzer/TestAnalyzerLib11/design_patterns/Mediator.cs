@@ -1,4 +1,4 @@
-﻿// Шаблон "Посредник" (Mediator)
+﻿// Mediator pattern
 
 using System;
 
@@ -6,7 +6,7 @@ namespace TestAnalyzerLib11;
 
 file interface IMediator
 {
-    // Только клллеги могут отправлять сообщения через посредника
+    // Only colleagues can send messages via the mediator
     [OnlyYou<Colleague>]
     void Notify(object sender, string eventName);
 }
@@ -14,6 +14,8 @@ file interface IMediator
 file abstract class Colleague
 {
     readonly IMediator _mediator;
+
+    //[OnlyYou<Colleague>] !!! not implemented
     protected Colleague(IMediator mediator) => _mediator = mediator;
     protected void Send(string eventName) => _mediator.Notify(this, eventName);
 }
@@ -26,7 +28,7 @@ file class Button : Colleague
     public void Click()
     {
         Console.WriteLine("Button clicked");
-        Send("buttonClicked"); // РАЗРЕШЕНО - Button наследник Colleague
+        Send("buttonClicked"); // Allowed as a derived from the Colleague
     }
 }
 
@@ -40,11 +42,11 @@ file class TextBox : Colleague
     public void SetText(string text)
     {
         Text = text;
-        Send("textChanged"); // РАЗРЕШЕНО
+        Send("textChanged");
     }
 }
 
-// Конкретный посредник
+// Specific mediator
 file class MyDialogMediator : IMediator
 {
     readonly Button _okButton;
@@ -60,7 +62,7 @@ file class MyDialogMediator : IMediator
     {
         if (sender is TextBox && eventName == "textChanged")
         {
-            // Включаем кнопку, если поле не пустое
+            // Enable the button if the field is not empty
             if (!string.IsNullOrEmpty(_nameField.Text))
             {
                 Console.WriteLine("Enabling OK button");
@@ -70,15 +72,15 @@ file class MyDialogMediator : IMediator
     }
 }
 
-// Никто другой не может созавать коллег и отправлять сообщения
+// No one else can create colleagues and send messages
 file class Outsider
 {
     void TryHack()
     {
         var dialog = new MyDialogMediator();
         
-        var button = /*EA_METH_001*/ new Button(dialog); // ОШИБКА! Outsider не IMediator
+        var button = /*EA_METH_001*/ new Button(dialog); // Compilation error! Outsider is not IMediator
 
-        /*EA_METH_001*/ dialog.Notify(button, "hack event"); // ОШИБКА! 
+        /*EA_METH_001*/ dialog.Notify(button, "hack event"); // Compilation error!
     }
 }

@@ -1,4 +1,4 @@
-﻿// Шаблон "Фабричный метод" (Factory Method)
+﻿// "Factory Method" pattern
 
 using System;
 
@@ -14,7 +14,7 @@ file class TextDocument : Document
 {
     public const string Type = nameof(TextDocument);
 
-    // Только фабрика может создавать документы
+    // Only the factory can create documents
     //[OnlyYou<DocumentFactory>]
     [OnlyYou(typeof(DocumentFactory))]
     public TextDocument() { }
@@ -27,7 +27,7 @@ file class SpreadsheetDocument : Document
 {
     public const string Type = nameof(SpreadsheetDocument);
 
-    // Только фабрика может создавать документы
+    // Only the factory can create documents
     //[OnlyYou<DocumentFactory>]
     [OnlyYou(typeof(DocumentFactory))]
     public SpreadsheetDocument() { }
@@ -36,28 +36,28 @@ file class SpreadsheetDocument : Document
     public override void Save() => Console.WriteLine("Saving spreadsheet");
 }
 
-// Фабрика - единственная, кто может создавать документы
+// The factory is the only one who can create documents
 file class DocumentFactory
 {
     public Document CreateDocument(string type)
     {
         return type switch
         {
-            TextDocument.Type => new TextDocument(), // РАЗРЕШЕНО
-            SpreadsheetDocument.Type => new SpreadsheetDocument(), // РАЗРЕШЕНО
+            TextDocument.Type => new TextDocument(), // Allowed
+            SpreadsheetDocument.Type => new SpreadsheetDocument(), // Allowed
             _ => throw new ArgumentException()
         };
     }
 }
 
-// Клиентский код не может создать документ напрямую
+// Client code cannot create document directly
 file class Client
 {
     void Test()
     {
-        var doc_try = /*EA_METH_001*/ new TextDocument(); // ОШИБКА! Client не DocumentFactory
+        var doc_try = /*EA_METH_001*/ new TextDocument(); // Error! Client is not DocumentFactory
 
-        // Правильно:
+        // Correctly:
         var factory = new DocumentFactory();
         var doc = factory.CreateDocument(TextDocument.Type);
     }

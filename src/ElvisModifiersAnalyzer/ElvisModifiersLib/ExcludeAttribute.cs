@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) 2025 LeaLan (VadimLL). All rights reserved.
+// License: MIT
+
+using System;
 
 using ElvisModifiersLib;
 

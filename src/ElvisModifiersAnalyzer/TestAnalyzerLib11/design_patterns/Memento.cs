@@ -1,35 +1,35 @@
-﻿// Шаблон "Снимок/Хранитель" (Memento)
+﻿// Memento pattern
 
 using System.Collections.Generic;
 
 namespace TestAnalyzerLib11;
 
-file class Originator // Создатель
+file class Originator
 {
-    // Внутренний класс с доступом только для Originator
+    // Inner class with access only to Originator
     [OnlyYou<Originator>]   
-    public class Memento // Снимок/Хранитель
+    public class Memento
     {
-        // Только Originator может создавать Memento
+        // Only Originator can create Memento
         public Memento(string state) => State = state;
 
-        // Только Originator может читать состояние
+        // Only Originator can read state
         public string State { get; }
     }
 
     public string State { get; set; } = "";
 
-    // Только Caretaker может создавать Снимок
+    // Only Caretaker can create Memento
     [OnlyYou<Caretaker>]
     public Memento Save() => new Memento(State);
 
-    // Только Caretaker может восстанавливать Снимок
+    // Only Caretaker can restore Memento
     [OnlyYou<Caretaker>]
     public void Restore(Memento memento) => State = memento.State;
 }
 
-// Может хранить Memento, но не может читать или изменять его
-file class Caretaker // Опекун
+// Caretaker can store Memento, but cannot read or modify it
+file class Caretaker
 {
     private Stack<Originator.Memento> _history = new ();
     public void SaveState(Originator originator) => _history.Push(originator.Save());
@@ -38,13 +38,13 @@ file class Caretaker // Опекун
         if (_history.Count > 0)
         {
             var memento = _history.Pop();
-            var state = /*EA_TYPE_001*/ memento.State; // ОШИБКА компиляции! Caretaker не Originator
+            var state = /*EA_TYPE_001*/ memento.State; // Compilation error! Caretaker is not Originator
             originator.Restore(memento);
         }
     }
 }
 
-// Использование
+// Usage
 file class Program
 {
     static void Main()
@@ -55,11 +55,11 @@ file class Program
         origin.State = "A";
         care.SaveState(origin);
         origin.State = "B";
-        care.Undo(origin); // Вернет состояние "A"
+        care.Undo(origin); // Restore the "A" state
 
-        // Но:
-        var memento = /*EA_METH_001*/ origin.Save(); // ОШИБКА компиляции!
-        var state = /*EA_TYPE_001*/ memento.State; // ОШИБКА компиляции!
-        memento = /*EA_TYPE_001*/ new Originator.Memento("bad state"); // ОШИБКА компиляции!
+        // But:
+        var memento = /*EA_METH_001*/ origin.Save(); // Compilation error!
+        var state = /*EA_TYPE_001*/ memento.State; // Compilation error!
+        memento = /*EA_TYPE_001*/ new Originator.Memento("bad state"); // Compilation error!
     }
 }
