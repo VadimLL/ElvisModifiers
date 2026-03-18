@@ -31,6 +31,9 @@ file class PizzaBuilder
 {
     Pizza _pizza = new Pizza();
 
+    //[Exclude]
+    public PizzaBuilder() { }
+
     // Only the director can set the ingredients
     [OnlyYou<PizzaDirector>]
     public void SetDough(string dough)

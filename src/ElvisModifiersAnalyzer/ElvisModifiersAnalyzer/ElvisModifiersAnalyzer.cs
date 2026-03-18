@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -322,33 +323,11 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
                 return false;
             }
 
-            var outerClassInterfaces = outerClassSymbol.AllInterfaces.ToList();
-            var outerType = outerClassSymbol.IsGenericType
-                ? outerClassSymbol.OriginalDefinition
-                : outerClassSymbol;
-
-            IEnumerable<(AttributeData AttrData, bool IsGeneric, INamedTypeSymbol AttrSymbol)>
-            oAttrsInfos = oAttrs
-                .Where(a => {
-                    // select only that O*<T> attributes where T == outerClass
-                    var attributeClass = a.AttributeClass!;
-                    if (attributeClass.IsGenericType)
-                    {
-                        return SymbolEqualityComparer.Default.Equals(attributeClass.TypeArguments.First(), outerClassSymbol)
-                        || outerClassInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(attributeClass.TypeArguments.First(), i));
-                    }
-
-                    var type = a.ConstructorArguments[0].Value as INamedTypeSymbol;
-                    if (type is null)
-                    {
-                        return false;
-                    }
-
-                    type = type.IsGenericType ? type.OriginalDefinition : type;
-                    return SymbolEqualityComparer.Default.Equals(type, outerType)
-                    || outerClassInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(type, i));
-                })
-                .Select(a => (a, a.AttributeClass!.IsGenericType, a.AttributeClass!));
+            IEnumerable<AttrInfo> oAttrsInfos = oAttrs
+                .Select(a => AttrInfo.Create(a, outerClassSymbol))
+                .Where(ai => ai != null)
+                .Select(ai => ai!)
+                .ToList();
 
             if (oAttrsInfos.Count() == 0) // outerClass is not "Only" type
             {
@@ -367,15 +346,22 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
 
             bool isAllowByOU = true; // is allow (by ouAttrsInfos) to invoke our member (symbol)?
             string outerMemberName = outerMember.GetName();
-
             // select [OnlyYou(Set)] attributes (OU)
             var ouAttrsInfos = isMethod || !isSet
                 ? oAttrsInfos.Where(static a => a.AttrSymbol?.Name == E.OnlyYouAttribute)
                 : oAttrsInfos.Where(static a => a.AttrSymbol?.Name is E.OnlyYouAttribute or E.OnlyYouSetAttribute);
-            if (ouAttrsInfos.SelectMany(static a => a.IsGeneric
+            if (!ouAttrsInfos.SelectMany(static a => a.IsGeneric
                         ? a.AttrData.ConstructorArguments[0].Values
                         : a.AttrData.ConstructorArguments[1].Values)
-                    .All(v => v.Value?.ToString() != outerMemberName))
+                    .Any(v => {
+                        string memberName = v.Value!.ToString();
+                        if (memberName.StartsWith(Const.RegExPrefix))
+                        {
+                            return Regex.IsMatch(outerMemberName, memberName.Substring(Const.RegExPrefixLen));
+                        }
+
+                        return memberName == outerMemberName; 
+                    }))
             {
                 isAllowByOU = false;
             }
@@ -429,7 +415,9 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
                 }
 
                 string methodAlias = aliasAttr.ConstructorArguments.First().Value!.ToString();
-                if (!aliases.Contains(methodAlias))
+                if (!aliases.Any(a => a!.StartsWith(Const.RegExPrefix)
+                        ? Regex.IsMatch(methodAlias, a.Substring(Const.RegExPrefixLen).Trim())
+                        : a == methodAlias))
                 {
                     isAllowByOA = false;
                     break;
@@ -592,7 +580,6 @@ file class OuterInfo
     public MemberDeclarationSyntax OuterMember { get; }
     public ClassDeclarationSyntax OuterClass { get; }
     public INamedTypeSymbol OuterClassSymbol { get; }
-
     public static OuterInfo? Get(
             in SyntaxNodeAnalysisContext context,
             in ISymbol symbol,
@@ -625,4 +612,87 @@ file class OuterInfo
 #endif
         return new OuterInfo(outerMember, outerClass, outerClassSymbol!);
     }
+}
+
+file class AttrInfo
+{
+    static readonly SymbolDisplayFormat symbolDisplayFormat = new SymbolDisplayFormat(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+
+    private AttrInfo(
+        AttributeData attrData,
+        bool isGeneric,
+        INamedTypeSymbol attrSymbol)
+    {
+        AttrData = attrData;
+        IsGeneric = isGeneric;
+        AttrSymbol = attrSymbol;
+    }
+
+    public static AttrInfo? Create(AttributeData attrData, INamedTypeSymbol outerTypeSymbol)
+    {
+        var outerTypeInterfaces = outerTypeSymbol.AllInterfaces.ToList();
+        var outerType = outerTypeSymbol.IsGenericType
+            ? outerTypeSymbol.OriginalDefinition
+            : outerTypeSymbol;
+
+        var attributeClass = attrData.AttributeClass!;
+        if (attributeClass.IsGenericType)
+        {
+            if(SymbolEqualityComparer.Default.Equals(attributeClass.TypeArguments.First(), outerTypeSymbol)
+                || outerTypeInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(attributeClass.TypeArguments.First(), i)))
+            {
+                return new AttrInfo(attrData, attrData.AttributeClass!.IsGenericType, attrData.AttributeClass!);
+            }
+
+            return null;
+        }
+
+        var friendType = attrData.ConstructorArguments[0].Value as INamedTypeSymbol;
+        if (friendType is null)
+        {
+            string? friendTypeName = attrData.ConstructorArguments[0].Value as string;
+            if (friendTypeName is not null)
+            {
+                string? outerTypeName = outerTypeSymbol.ToDisplayString(symbolDisplayFormat);
+                if (friendTypeName.StartsWith(Const.RegExPrefix))
+                {
+                    friendTypeName = friendTypeName.Substring(Const.RegExPrefixLen).Trim();
+                    var friendTypeRegEx = new Regex(friendTypeName, RegexOptions.Compiled);
+                    if (friendTypeRegEx.IsMatch(outerTypeName)
+                        || outerTypeInterfaces.Any(i => friendTypeRegEx.IsMatch(i.ToDisplayString(symbolDisplayFormat))))
+                    {
+                        return new AttrInfo(attrData, false, attrData.AttributeClass!);
+                    }
+                }
+
+                if (friendTypeName == outerTypeName
+                    || outerTypeInterfaces.Any(i => i.ToDisplayString(symbolDisplayFormat) == friendTypeName))
+                {
+                    return new AttrInfo(attrData, false, attrData.AttributeClass!);
+                }
+            }
+
+            return null;
+        }
+
+        friendType = friendType.IsGenericType ? friendType.OriginalDefinition : friendType;
+        if(SymbolEqualityComparer.Default.Equals(friendType, outerType)
+            || outerTypeInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(friendType, i)))
+        {
+            return new AttrInfo(attrData, false, attrData.AttributeClass!);
+        }
+
+        return null;
+    }
+
+    public AttributeData AttrData { get; }
+    public bool IsGeneric { get; }
+    public INamedTypeSymbol AttrSymbol { get; }
+}
+
+file static class Const
+{
+    public const string RegExPrefix = "R:";
+    public static readonly int RegExPrefixLen = RegExPrefix.Length;
 }

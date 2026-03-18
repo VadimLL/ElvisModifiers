@@ -9,6 +9,7 @@ using ElvisModifiersLib;
 public class OnlyYouSetAttribute : Attribute
 {
     public OnlyYouSetAttribute(Type type, params string[] members) { }
+    public OnlyYouSetAttribute(string type, params string[] members) { }
 }
 
 // variant only for C# 11 and above:
@@ -26,6 +27,7 @@ public class OnlyYouSetAttribute<T> : Attribute
 public class OnlyAliasSetAttribute : Attribute
 {
     public OnlyAliasSetAttribute(Type type, params string[] members) { }
+    public OnlyAliasSetAttribute(string type, params string[] members) { }
 }
 
 // variant only for C# 11 and above:

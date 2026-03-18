@@ -12,7 +12,7 @@
   <PropertyGroup>
     
     <PackageId>ElvisModifiersLib</PackageId>
-    <PackageVersion>1.0.2</PackageVersion>
+    <PackageVersion>1.0.3</PackageVersion>
     <PackageTags>ElvisModifiersLib, analyzers</PackageTags>
     <Title>ElvisModifiersLib</Title>
     <Copyright>Copyright (c) LeaLan (VadimLL)</Copyright>

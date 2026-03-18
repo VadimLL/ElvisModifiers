@@ -6,11 +6,14 @@ using System;
 
 using ElvisModifiersLib;
 
+
 [AttributeUsage(Constants.OnlyYouTargets, AllowMultiple = true)]
 public class OnlyYouAttribute : Attribute // OnlyUAttribute // OUAttribute
 {
     public OnlyYouAttribute(Type type, params string[] members) { }
-    
+
+    public OnlyYouAttribute(string type, params string[] members) { }
+
     //public OnlyYouAttribute(params Expression[] expressions) { }
 }
 
@@ -29,6 +32,7 @@ public class OnlyYouAttribute<T> : Attribute
 public class OnlyAliasAttribute : Attribute
 {
     public OnlyAliasAttribute(Type type, params string[] aliases) { }
+    public OnlyAliasAttribute(string type, params string[] members) { }
 }
 
 // variant for C# 11 and above:

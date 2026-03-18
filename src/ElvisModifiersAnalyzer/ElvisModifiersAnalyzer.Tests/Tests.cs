@@ -38,7 +38,10 @@ public sealed class Tests
 #endif
             ))
         {
-            yield return [file];
+            //if (new[] { "YourExcludeFile.cs" }.All(x => !file.Contains(x))) // for debug purpose: temporary exclude specific files
+            {
+                yield return [file];
+            }
         }
     }
 

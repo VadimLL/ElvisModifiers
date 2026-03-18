@@ -14,15 +14,14 @@ public class ExcludeAttribute : Attribute
 // ??? another names: ExcludeYou, Exept(You), Off, Cancel, Divorce, Free, Bye,...???
 {
     public ExcludeAttribute() { }
-    public ExcludeAttribute(Type type, params string[] members) { } // ???
+    public ExcludeAttribute(Type type/*, params string[] members*/) { } // members ???
+    public ExcludeAttribute(string type/*, params string[] members*/) { } // members ???
 }
 
 [AttributeUsage(Constants.ExcludeTargets, AllowMultiple = true)]
 public class ExcludeAttribute<T> : Attribute
 {
-    public ExcludeAttribute(
-            params string[] members // ???
-        ) { }
+    public ExcludeAttribute(/*params string[] members*/) { } // members ???
 }
 
 /* !!! [Exclude] raw concept:
