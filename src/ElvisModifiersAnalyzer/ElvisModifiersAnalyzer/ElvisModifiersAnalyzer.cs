@@ -306,18 +306,18 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             in OuterInfo outerInfo,
             in ISymbol symbol,
             in SyntaxNode operationNode,
-            IEnumerable<AttributeData> oAttrs,
+            in IEnumerable<AttributeData> oAttrs,
             in bool isSet,
             params object?[]? messageArgs)
         {
             (MemberDeclarationSyntax outerMember,
              ClassDeclarationSyntax outerClass,
              INamedTypeSymbol outerClassSymbol) = outerInfo;
-
+            
             bool isMethod = symbol is IMethodSymbol;
-            bool hasOnlySetAttr = oAttrs.Any(static a =>
+            bool hasOnlySetAttr = oAttrs.All(static a =>
                 a.AttributeClass?.Name is E.OnlyYouSetAttribute or E.OnlyAliasSetAttribute);
-            if (!isMethod && !isSet && hasOnlySetAttr)
+            if (hasOnlySetAttr && (isMethod || !isSet))
             {
                 // All can read [OnlySet*] property
                 return false;
@@ -325,19 +325,21 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
 
             IEnumerable<AttrInfo> oAttrsInfos = oAttrs
                 .Select(a => AttrInfo.Create(a, outerClassSymbol))
-                .Where(ai => ai != null)
-                .Select(ai => ai!)
+                .Where(static ai => ai != null)
+                .Select(static ai => ai!)
                 .ToList();
-
             if (oAttrsInfos.Count() == 0) // outerClass is not "Only" type
+            //if (oAttrsInfos.Count() < oAttrs.Count()) // outerClass is not "Only" type
             {
                 reportDiagnostic(rule, context, operationNode, messageArgs);
                 return true;
             }
 
-            oAttrsInfos = oAttrsInfos.Where(static a => a.IsGeneric
+            oAttrsInfos = oAttrsInfos
+                .Where(static a => a.IsGeneric
                             ? a.AttrData.ConstructorArguments[0].Values.Count() > 0
-                            : a.AttrData.ConstructorArguments[1].Values.Count() > 0);
+                            : a.AttrData.ConstructorArguments[1].Values.Count() > 0)
+                .ToList();
             if (oAttrsInfos.Count() == 0)
             {
                 // => all members of the outerClass is friends (i.e. allowed)
@@ -380,15 +382,8 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
                     break;
                 }
 
-                // [OnlyAlias(Set)(type, aliases)]
-                var aliases = oaAttrInfos
-                    .SelectMany(a => a.IsGeneric
-                        ? a.AttrData.ConstructorArguments[0].Values
-                        : a.AttrData.ConstructorArguments[1].Values)
-                    .Select(a => a.Value?.ToString())
-                    .Where(a => a is not null);
-
-                var outerInterfaceMethod = context.SemanticModel.GetDeclaredSymbol(outerMember)?.FindInterfaceMember();
+                ISymbol? outerMemberSymbol = context.SemanticModel.GetDeclaredSymbol(outerMember);
+                ISymbol? outerInterfaceMethod = outerMemberSymbol?.FindInterfaceMember();
                 if (outerMember.AttributeLists.Count == 0 && outerInterfaceMethod is null)
                 {
                     isAllowByOA = false;
@@ -397,8 +392,7 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
 
                 // [Alias(methodAlias)]
                 // get [Alias] attribute for outerMember
-                var aliasAttr = context.SemanticModel
-                    .GetDeclaredSymbol(outerMember)?
+                var aliasAttr = outerMemberSymbol?
                     .GetAttributes()
                     .Where(static a => a.AttributeClass?.Name is E.AliasAttribute)
                     .FirstOrDefault();
@@ -413,6 +407,14 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
                         break;
                     }
                 }
+
+                // [OnlyAlias(Set)(type, aliases)]
+                var aliases = oaAttrInfos
+                    .SelectMany(static a => a.IsGeneric
+                        ? a.AttrData.ConstructorArguments[0].Values
+                        : a.AttrData.ConstructorArguments[1].Values)
+                    .Select(a => a.Value?.ToString())
+                    .Where(a => a is not null);
 
                 string methodAlias = aliasAttr.ConstructorArguments.First().Value!.ToString();
                 if (!aliases.Any(a => a!.StartsWith(Const.RegExPrefix)
@@ -435,7 +437,7 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
 
         /*-----------------------------------------------------------*/
 
-        //beep();
+        //Beep();
 
         if (symbol is null)
         {
@@ -448,13 +450,79 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
+        var interfaceMember = symbol.FindInterfaceMember();
+
+        var allExcludeAttrsOnMember = symbol.GetAttributes()
+            .Where(static a => a.AttributeClass?.Name == E.ExcludeAttribute)
+            .ToList();
+        if (interfaceMember is not null)
+        {
+            // get Exclude-attributes on interface member
+            IEnumerable<AttributeData>? oAttrsOnInterfaceMember = interfaceMember
+                .GetAttributes()
+                .Where(static a => a.AttributeClass?.Name is E.ExcludeAttribute);
+            allExcludeAttrsOnMember.AddRange(oAttrsOnInterfaceMember);
+        }
+
+        IEnumerable<TypeInfo> excludeTypesOnMember = allExcludeAttrsOnMember
+            .Where(static a => a.AttributeClass!.IsGenericType || a.ConstructorArguments.Count() > 0)
+            .Select(static a => TypeInfo.Create(a))
+            .ToList();
+        if (allExcludeAttrsOnMember.Count() > excludeTypesOnMember.Count())
+        {
+            // => there is `[Exclude]` (without any arguments)
+            return false;
+        }
+
+        bool isMethod = symbol is IMethodSymbol;
+
         // get o-attributes on class (potential attractor)
-        var oAttrsOnClass = symbol.ContainingType.GetAttributes()
+        var oAttrsOnClass = isMethod
+            ? symbol.ContainingType.GetAttributes()
+            .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                      or E.OnlyAliasAttribute).ToList()
+            : symbol.ContainingType.GetAttributes()
             .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
                                                       or E.OnlyAliasAttribute
                                                       or E.OnlyYouSetAttribute
-                                                      or E.OnlyAliasSetAttribute)
-            .ToList();
+                                                      or E.OnlyAliasSetAttribute).ToList();
+        if (interfaceMember is not null)
+        {
+            var oAttrsOnInterface = isMethod
+                ? symbol.ContainingType.GetAttributes()
+                .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                          or E.OnlyAliasAttribute)
+                : symbol.ContainingType.GetAttributes()
+                .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                          or E.OnlyAliasAttribute
+                                                          or E.OnlyYouSetAttribute
+                                                          or E.OnlyAliasSetAttribute);
+            oAttrsOnClass.AddRange(oAttrsOnInterface);
+        }
+
+        //!!! ??? the following code is not working: IntelliSense does not highlight the error
+        //if (oAttrsOnClass.Count() == 0 && allExcludeAttrsOnMember.Count() > 0)
+        //{
+        //    var syntaxReferences = symbol.DeclaringSyntaxReferences;
+        //    SyntaxNode syntaxNode = syntaxReferences.First().GetSyntax();
+        //    var span = syntaxNode.Span;
+        //    span = Microsoft.CodeAnalysis.Text.TextSpan.FromBounds(span.Start, span.Start + 10);
+        //    var diagnostic = Diagnostic.Create(
+        //        typeRule,
+        //        Location.Create(syntaxNode.SyntaxTree, span),
+        //        ["qq1", "qq2"]
+        //    );
+        //    context.ReportDiagnostic(diagnostic);
+        //    return true;
+        //}
+
+        if (excludeTypesOnMember.Count() > 0)
+        {
+            oAttrsOnClass = oAttrsOnClass
+                .Where(a => !excludeTypesOnMember.Any(t => t.IsFit(a)))
+                .ToList();
+        }
+
         if (oAttrsOnClass.Count() > 0) // => realy attractor
         {
             /*
@@ -469,7 +537,7 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
                 void OuterMethod2(in Me me) => me.Operation[1/2](); // operationNode // err
             }
              */
-            bool isMethod = symbol is IMethodSymbol;
+            //bool isMethod = symbol is IMethodSymbol;
             bool hasOnlySetAttr = oAttrsOnClass.Any(static a =>
                 a.AttributeClass?.Name is E.OnlyYouSetAttribute or E.OnlyAliasSetAttribute);
             if (analyzeOperation(
@@ -486,6 +554,8 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
             }
         }
 
+        ///////////// Members analysis: /////////////
+
         /*
         class Attractor {
             [OnlyYou<OuterClass>(nameof(OuterClass.OuterMethod))] // oAttrsOnMember
@@ -497,18 +567,23 @@ public class ElvisModifiersAnalyzer : DiagnosticAnalyzer
         }
          */
         // get o-attributes on member (member of potential attractor)
-        var oAttrsOnMember = symbol.GetAttributes()
+
+        var oAttrsOnMember = isMethod
+            ? symbol.GetAttributes()
+            .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                      or E.OnlyAliasAttribute).ToList()
+            : symbol.GetAttributes()
             .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
                                                       or E.OnlyAliasAttribute
                                                       or E.OnlyYouSetAttribute
-                                                      or E.OnlyAliasSetAttribute)
-            .ToList();
-
-        var interfaceMember = symbol.FindInterfaceMember();
+                                                      or E.OnlyAliasSetAttribute).ToList();
         if (interfaceMember is not null)
         {
-            // get o-attributes on interface member (member of potential attractor-interface)
-            var oAttrsOnInterfaceMember = interfaceMember.GetAttributes()
+            var oAttrsOnInterfaceMember = isMethod
+                ? interfaceMember.GetAttributes()
+                .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
+                                                          or E.OnlyAliasAttribute)
+                : interfaceMember.GetAttributes()
                 .Where(static a => a.AttributeClass?.Name is E.OnlyYouAttribute
                                                           or E.OnlyAliasAttribute
                                                           or E.OnlyYouSetAttribute
@@ -616,9 +691,6 @@ file class OuterInfo
 
 file class AttrInfo
 {
-    static readonly SymbolDisplayFormat symbolDisplayFormat = new SymbolDisplayFormat(
-        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
-
     private AttrInfo(
         AttributeData attrData,
         bool isGeneric,
@@ -654,20 +726,20 @@ file class AttrInfo
             string? friendTypeName = attrData.ConstructorArguments[0].Value as string;
             if (friendTypeName is not null)
             {
-                string? outerTypeName = outerTypeSymbol.ToDisplayString(symbolDisplayFormat);
+                string? outerTypeName = outerTypeSymbol.ToDisplayString(Const.SymbolDisplayFormat);
                 if (friendTypeName.StartsWith(Const.RegExPrefix))
                 {
                     friendTypeName = friendTypeName.Substring(Const.RegExPrefixLen).Trim();
                     var friendTypeRegEx = new Regex(friendTypeName, RegexOptions.Compiled);
                     if (friendTypeRegEx.IsMatch(outerTypeName)
-                        || outerTypeInterfaces.Any(i => friendTypeRegEx.IsMatch(i.ToDisplayString(symbolDisplayFormat))))
+                        || outerTypeInterfaces.Any(i => friendTypeRegEx.IsMatch(i.ToDisplayString(Const.SymbolDisplayFormat))))
                     {
                         return new AttrInfo(attrData, false, attrData.AttributeClass!);
                     }
                 }
 
                 if (friendTypeName == outerTypeName
-                    || outerTypeInterfaces.Any(i => i.ToDisplayString(symbolDisplayFormat) == friendTypeName))
+                    || outerTypeInterfaces.Any(i => i.ToDisplayString(Const.SymbolDisplayFormat) == friendTypeName))
                 {
                     return new AttrInfo(attrData, false, attrData.AttributeClass!);
                 }
@@ -691,8 +763,87 @@ file class AttrInfo
     public INamedTypeSymbol AttrSymbol { get; }
 }
 
+file class TypeInfo
+{
+    public static TypeInfo Create(AttributeData attrData)
+    {
+        if (attrData.AttributeClass!.IsGenericType)
+        {
+            return new TypeInfo(attrData.AttributeClass.TypeArguments.First() as INamedTypeSymbol, null);
+        }
+
+        return attrData.ConstructorArguments[0].Value switch
+        {
+            string str => new TypeInfo(null, str),
+            INamedTypeSymbol symbol => new TypeInfo(symbol, null),
+            _ => new TypeInfo(null, null)
+            //_ => throw new ArgumentException()
+        };
+    }
+
+    private TypeInfo(INamedTypeSymbol? symbol, string? name)
+    {
+        Symbol = symbol;
+        Name = name;
+    }
+
+    public INamedTypeSymbol? Symbol { get; }
+    public string? Name { get; }
+    public bool IsFit(AttributeData attrData)
+    {
+        ITypeSymbol? tSymbol = null;
+        if (attrData.AttributeClass!.IsGenericType)
+        {
+            tSymbol = attrData.AttributeClass.TypeArguments.First();
+        }
+
+        string? tName = null;
+        if (tSymbol is null)
+        {
+            switch(attrData.ConstructorArguments[0].Value)
+            {
+                case INamedTypeSymbol s:
+                    tSymbol = s;
+                    break;
+                case string n:
+                    tName = n;
+                    break;
+            }
+        }
+
+        if (tSymbol is not null)
+        {
+            if (Symbol is not null)
+            {
+                return SymbolEqualityComparer.Default.Equals(tSymbol, Symbol);
+            }
+            if (Name is not null)
+            {
+                return tSymbol.ToDisplayString(Const.SymbolDisplayFormat) == Name;
+            }
+
+            return false;
+        }
+
+        if (tName is not null)
+        {
+            if(Name is not null && tName.StartsWith(Const.RegExPrefix) && !Name.StartsWith(Const.RegExPrefix))
+            {
+                return Regex.IsMatch(Name, tName.Substring(Const.RegExPrefixLen).Trim());
+            }
+
+            return tName == Name;
+        }
+
+        return false;
+    }
+}
+
 file static class Const
 {
     public const string RegExPrefix = "R:";
     public static readonly int RegExPrefixLen = RegExPrefix.Length;
+
+    public static readonly SymbolDisplayFormat SymbolDisplayFormat = new SymbolDisplayFormat(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
 }

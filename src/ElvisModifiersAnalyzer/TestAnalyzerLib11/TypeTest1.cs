@@ -1,21 +1,21 @@
 ﻿namespace TestAnalyzerLib11;
 
-[OnlyYou<MyFriend>]
+[OnlyYou<Friend>]
 file class Me
 {
     public int Value { get; set; }
 
     public void Method1() { }
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.CanInvoke1))]
+    [OnlyYou<Friend>(nameof(Friend.CanInvoke1))]
     public void Method2() { }
     
-    [OnlyYou<NotMyFriend>(nameof(MyFriend.CanInvoke1))]
-    [OnlyYou<NotMyFriend>(nameof(NotMyFriend.Some1))] // no effect !!! prohibit the attribute with a rule? 
+    [OnlyYou<NoFriend>(nameof(Friend.CanInvoke1))]
+    [OnlyYou<NoFriend>(nameof(NoFriend.Some1))] // no effect !!! prohibit the attribute with a rule? 
     public void Method3() { }
 }
 
-[OnlyYou<MyFriend>(nameof(MyFriend.UseMe2))]
+[OnlyYou<Friend>(nameof(Friend.UseMe2))]
 file class Me2
 {
     public int Value { get; set; }
@@ -23,7 +23,7 @@ file class Me2
 }
 
 
-file class MyFriend
+file class Friend
 {
     public void CanInvoke1(in Me me) => me.Method2(); // ok
     public void CanInvoke2(in Me me) => me.Method1(); // ok
@@ -43,7 +43,7 @@ file class MyFriend
     }
 }
 
-file class NotMyFriend
+file class NoFriend
 {
     public void Some1(in Me me) => /*EA_TYPE_001*/ me.Method1(); // err
     public void Some2(in Me me) => /*EA_TYPE_001*/ me.Method2(); // err

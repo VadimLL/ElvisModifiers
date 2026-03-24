@@ -2,7 +2,7 @@
 
 file class Me
 {
-    [OnlyYou<MyFriend>(nameof(MyFriend.CreateMe))]
+    [OnlyYou<Friend>(nameof(Friend.CreateMe))]
     public Me(decimal money) { }
 
     public Me CreateNew(decimal money) => new Me(money); // ok
@@ -10,7 +10,7 @@ file class Me
     public static Me Instance0 => new Me(0); // ok
 }
 
-file class MyFriend
+file class Friend
 {
     public void CreateMe()
     {
@@ -25,7 +25,7 @@ file class MyFriend
     }
 }
 
-file class NotMyFriend
+file class NoFriend
 {
     public void CreateMe()
     {

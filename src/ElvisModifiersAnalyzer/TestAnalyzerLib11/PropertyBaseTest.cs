@@ -5,19 +5,19 @@ namespace TestAnalyzerLib11;
 
 file class Me
 {
-    [OnlyYou<MyFriend>(nameof(MyFriend.SetGlobalMoney))]
+    [OnlyYou<Friend>(nameof(Friend.SetGlobalMoney))]
     public static decimal GlobalMoney { get; set; } = 100;
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.SetMoney))]
+    [OnlyYou<Friend>(nameof(Friend.SetMoney))]
     public decimal Money { get; set; } = 100;
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.SetMoney))]
+    [OnlyYou<Friend>(nameof(Friend.SetMoney))]
     public decimal MoneyF = 100;
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.SetMoney))]
+    [OnlyYou<Friend>(nameof(Friend.SetMoney))]
     public event Action<int>? Updated;
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.SetMoney))]
+    [OnlyYou<Friend>(nameof(Friend.SetMoney))]
     public IList<decimal> Moneys = new List<decimal>();
 
     public void SelfSetMoney()
@@ -30,7 +30,7 @@ file class Me
     }
 }
 
-file class MyFriend
+file class Friend
 {
     public void SetMoney(in Me me) // ok
     {

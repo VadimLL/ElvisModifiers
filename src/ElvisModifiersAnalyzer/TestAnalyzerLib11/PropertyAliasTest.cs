@@ -6,15 +6,15 @@ file class Me
     public const string AcceptOne = nameof(AcceptOne);
     public const string AcceptGlobalMul = nameof(AcceptGlobalMul);
 
-    [OnlyAlias<MyFriend>(AcceptGlobalMul)]
+    [OnlyAlias<Friend>(AcceptGlobalMul)]
     public static decimal GlobalMoney { get; set; } = 100;
 
-    //[OnlyAlias<MyFriend>(AcceptOne)]
-    [OnlyAlias<MyFriend>(AcceptMul)]
+    //[OnlyAlias<Friend>(AcceptOne)]
+    [OnlyAlias<Friend>(AcceptMul)]
     public decimal Money { get; set; } = 100;
 }
 
-file class MyFriend
+file class Friend
 {
     //[Alias(Me.AcceptOne)]
     public void AcceptMoney(in Me me) => /*EA_PROP_002*/ me.Money = 0; // err

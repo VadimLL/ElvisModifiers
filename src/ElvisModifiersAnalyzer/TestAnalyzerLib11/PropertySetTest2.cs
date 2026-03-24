@@ -1,12 +1,12 @@
 ﻿namespace TestAnalyzerLib11;
 
-[OnlyYouSet<MyFriend1>]
+[OnlyYouSet<Friend1>]
 file class Me1
 {
     public decimal Money { get; set; } = 100;
 }
 
-[OnlyAliasSet<MyFriend2>(SetMoney)]
+[OnlyAliasSet<Friend2>(SetMoney)]
 file class Me2
 {
     public const string SetMoney = nameof(SetMoney);
@@ -14,7 +14,7 @@ file class Me2
 }
 
 
-file class MyFriend1
+file class Friend1
 {
     public void SetMoney(in Me1 me) // ok
     {
@@ -36,7 +36,7 @@ file class MyFriend1
 
 }
 
-file class MyFriend2
+file class Friend2
 {
     [Alias(Me2.SetMoney)]
     public void SetMoney(in Me2 me) // ok
@@ -51,7 +51,7 @@ file class MyFriend2
 
 
 
-file class NotMyFriend
+file class NoFriend
 {
     public void SetMoney(in Me1 me)
     {

@@ -4,10 +4,10 @@ file class Me
 {
     public decimal Money { get; private set; } = 100;
 
-    [OnlyYou<MyFriend1>(nameof(MyFriend1.AcceptMoney)
-                      , nameof(MyFriend1.Property)
-                      , nameof(MyFriend1.Field))]
-    [OnlyYou<MyFriend2>(nameof(MyFriend2.AcceptMoney))]
+    [OnlyYou<Friend1>(nameof(Friend1.AcceptMoney)
+                    , nameof(Friend1.Property)
+                    , nameof(Friend1.Field))]
+    [OnlyYou<Friend2>(nameof(Friend2.AcceptMoney))]
     public decimal TakeMyHalfMoney() {
         decimal half = Money / 2;
         Money -= half;
@@ -15,7 +15,7 @@ file class Me
     }
 }
 
-file class MyFriend1
+file class Friend1
 {
     public void AcceptMoney(in Me me) => Money += me.TakeMyHalfMoney(); // ok
     public void CantAcceptMoney(in Me me)
@@ -27,7 +27,7 @@ file class MyFriend1
 
     static Me _Me = null!;
 
-    public MyFriend1()
+    public Friend1()
     {
         /*EA_METH_001*/ _me.TakeMyHalfMoney(); // err
         /*EA_METH_001*/ _Me.TakeMyHalfMoney(); // err
@@ -83,7 +83,7 @@ file class MyFriend1
     }
 }
 
-file class MyFriend2
+file class Friend2
 {
     Me me2 = new Me();
 

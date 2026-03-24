@@ -4,7 +4,7 @@ file class Me
 {
     public interface IFriend
     {
-        [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+        [OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
         static decimal TakeMyHalfMoney(Me self)
         {
             decimal half = self.Money / 2;
@@ -17,7 +17,7 @@ file class Me
     public decimal UnsharedMoney { get; private set; } = 100_000;
 }
 
-file class MyFriend : Me.IFriend
+file class Friend : Me.IFriend
 {
     public void AcceptMoney(in Me me)
       => Money += Me.IFriend.TakeMyHalfMoney(me); // ok

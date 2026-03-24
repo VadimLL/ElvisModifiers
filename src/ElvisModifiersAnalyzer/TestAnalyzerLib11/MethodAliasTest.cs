@@ -8,8 +8,8 @@ file class Me
 
     public decimal Money { get; private set; } = 100;
 
-    [OnlyAlias<MyFriend>(AcceptMul, AcceptOne, CtorWithArg)]
-    //[OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+    [OnlyAlias<Friend>(AcceptMul, AcceptOne, CtorWithArg)]
+    //[OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
     public decimal TakeMyHalfMoney() {
         decimal half = Money / 2;
         Money -= half;
@@ -17,7 +17,7 @@ file class Me
     }
 }
 
-file class MyFriend
+file class Friend
 {
     //[Alias(Me.AcceptOne)]
     public void AcceptMoney(in Me me)
@@ -34,11 +34,11 @@ file class MyFriend
     public decimal Money { get; private set; } = -40;
 
     [Alias(Me.CtorWithArg)]
-    public MyFriend(Me me) {
+    public Friend(Me me) {
         Money = me.TakeMyHalfMoney();
     }
 
-    public MyFriend() {
+    public Friend() {
         var me = new Me();
         Money = /*EA_METH_001*/ me.TakeMyHalfMoney();
     }

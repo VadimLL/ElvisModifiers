@@ -4,13 +4,13 @@
     {
         T Value { get; set; } = default!;
 
-        [OnlyYou(typeof(MyFriend<>))]
+        [OnlyYou(typeof(Friend<>))]
         public T Value2 { get; set; } = default!;
 
-        [OnlyYou(typeof(MyFriend<>))]
+        [OnlyYou(typeof(Friend<>))]
         public T GetValue() => Value;
 
-        [OnlyYou(typeof(MyFriend<>), nameof(MyFriend.Test))]
+        [OnlyYou(typeof(Friend<>), nameof(Friend.Test))]
         public T GetValue2() => Value;
 
         void Test(Me<T> me)
@@ -25,12 +25,12 @@
     {
         string Value { get; set; } = default!;
 
-        [OnlyYou(typeof(MyFriend<string>))]
+        [OnlyYou(typeof(Friend<string>))]
         public string GetValue() => Value;
     }
 
 
-    file class MyFriend
+    file class Friend
     {
         public void Test(Me<string> me)
         {
@@ -45,7 +45,7 @@
         }
     }
 
-    file class MyFriend<T>
+    file class Friend<T>
     {
         public void Test(Me<T> me)
         {
@@ -66,7 +66,7 @@
         }
     }
 
-    file class NotMyFriend<T>
+    file class NoFriend<T>
     {
         public void Test(Me<T> me)
         {
@@ -79,7 +79,7 @@
 
 namespace NS2
 {
-    file class MyFriend<T>
+    file class Friend<T>
     {
         public void Test(NS1.Me<T> me)
         {

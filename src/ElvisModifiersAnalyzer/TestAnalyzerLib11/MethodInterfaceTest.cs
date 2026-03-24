@@ -2,10 +2,10 @@
 
 file interface IMe
 {    
-    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+    [OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
     decimal TakeMyHalfMoney();
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+    [OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
     static void StaticMethod() { }
 }
 
@@ -20,7 +20,7 @@ file class Me : IMe
     }
 }
 
-file class MyFriend
+file class Friend
 {
     public void AcceptMoney(in Me me)
     {

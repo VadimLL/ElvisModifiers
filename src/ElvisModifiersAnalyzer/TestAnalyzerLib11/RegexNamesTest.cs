@@ -5,30 +5,30 @@ file class Me
     public const string Alias1 = nameof(Alias1);
     public const string Alias2 = nameof(Alias2);
 
-    [OnlyYou<MyFriend>("R:^Use[1-3]Me$")]
+    [OnlyYou<Friend>("R:^Use[1-3]Me$")]
     public int Value1 { get; set; }
 
-    [OnlyYouSet<MyFriend>("R:^Use[1-3]Me$")]
+    [OnlyYouSet<Friend>("R:^Use[1-3]Me$")]
     public int Value2 { get; set; }
 
-    [OnlyAliasSet<MyFriend>("R:^Alias[1-2]$")]
+    [OnlyAliasSet<Friend>("R:^Alias[1-2]$")]
     public int Value3 { get; set; }
 
-    [OnlyYou<MyFriend>("R:^Use[1-4]Me$")]
+    [OnlyYou<Friend>("R:^Use[1-4]Me$")]
     public int Method1()
     {
         Value1 += 1;
         return Value1;
     }
 
-    [OnlyYou(@$"R:^{nameof(TestAnalyzerLib11)}\.(MyFriend|Friend1)$", "R:^Use[1-2]Me$")]
+    [OnlyYou(@$"R:^{nameof(TestAnalyzerLib11)}\.(Friend|Friend1)$", "R:^Use[1-2]Me$")]
     public int Method2()
     {
         Value2 += 1;
         return Value2;
     }
 
-    [OnlyAlias<MyFriend>("R:^Alias[1-2]$")]
+    [OnlyAlias<Friend>("R:^Alias[1-2]$")]
     public int Method3()
     {
         Value1 += 1;
@@ -36,14 +36,14 @@ file class Me
     }
 }
 
-[OnlyYou(@$"R:^{nameof(TestAnalyzerLib11)}\.(MyFriend|Friend1)$", "R:^Use[1-2]Me2$")]
+[OnlyYou(@$"R:^{nameof(TestAnalyzerLib11)}\.(Friend|Friend1)$", "R:^Use[1-2]Me2$")]
 file class Me2
 {
     public void Method1() { }
     public int Value1 { get; set; }
 }
 
-file class MyFriend
+file class Friend
 {
     public void Use1Me(Me me)
     {
@@ -180,7 +180,7 @@ file class Friend1
     }
 }
 
-file class NotFriend
+file class NoFriend
 {
     public void Use1Me(Me me)
     {

@@ -4,7 +4,7 @@
     {
         public decimal Money { get; private set; } = 100;
 
-        [OnlyYou<NS1.MyFriend>(nameof(NS1.MyFriend.AcceptMoney))]
+        [OnlyYou<NS1.Friend>(nameof(NS1.Friend.AcceptMoney))]
         public decimal TakeMyHalfMoney1()
         {
             decimal half = Money / 2;
@@ -12,7 +12,7 @@
             return half;
         }
 
-        [OnlyYou<NS2.MyFriend>(nameof(NS2.MyFriend.AcceptMoney))]
+        [OnlyYou<NS2.Friend>(nameof(NS2.Friend.AcceptMoney))]
         public decimal TakeMyHalfMoney2()
         {
             decimal half = Money / 2;
@@ -25,7 +25,7 @@
 namespace NS1
 {
     using TestAnalyzerLib11;
-    file class MyFriend
+    file class Friend
     {
         public void AcceptMoney(in Me me)
         {
@@ -41,7 +41,7 @@ namespace NS1
 namespace NS2
 {
     using TestAnalyzerLib11;
-    file class MyFriend
+    file class Friend
     {
         public void AcceptMoney(in Me me)
         {

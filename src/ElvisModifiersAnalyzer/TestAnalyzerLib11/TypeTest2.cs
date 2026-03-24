@@ -1,19 +1,19 @@
 ﻿namespace TestAnalyzerLib11;
 
-[OnlyAlias<MyFriend>(InvokeMul)]
+[OnlyAlias<Friend>(InvokeMul)]
 file class Me
 {
     public const string InvokeMul = nameof(InvokeMul);
     public const string InvokeOne = nameof(InvokeOne);
 
-    [OnlyAlias<MyFriend>(InvokeOne)]
+    [OnlyAlias<Friend>(InvokeOne)]
     public decimal Money { get; set; } = 100;
 
     public void Method1() { }
     public void Method2() { }
 }
 
-file class MyFriend
+file class Friend
 {
     [Alias(Me.InvokeMul)]
     public void CanInvoke1(in Me me, int mul)
@@ -28,7 +28,7 @@ file class MyFriend
     public void SomeSet3(in Me me) => /*EA_TYPE_001*/ me.Money++; // err
 }
 
-file class NotMyFriend
+file class NoFriend
 {
     public void Some1(in Me me) => /*EA_TYPE_001*/ me.Method1(); // err
     public void Some2(in Me me) => /*EA_TYPE_001*/ me.Method2(); // err

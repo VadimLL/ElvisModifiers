@@ -26,35 +26,22 @@ file class Pizza
     public string Description => $"Dough: {Dough}; Sauce: {Sauce};...";
 }
 
-//[OnlyYou<PizzaDirector>]
+// Only the director can set the ingredients
+[OnlyYou<PizzaDirector>]
 file class PizzaBuilder
 {
     Pizza _pizza = new Pizza();
 
-    //[Exclude]
+    // Everyone can create the builder
+    [Exclude]
     public PizzaBuilder() { }
 
-    // Only the director can set the ingredients
-    [OnlyYou<PizzaDirector>]
-    public void SetDough(string dough)
-    {
-        _pizza.Dough = dough;
-    }
+    public void SetDough(string dough) => _pizza.Dough = dough;
+    public void SetSauce(string sauce) => _pizza.Sauce = sauce;
+    public void AddTopping(string topping) => _pizza.AddToppings(topping);
 
-    [OnlyYou<PizzaDirector>]
-    public void SetSauce(string sauce)
-    {
-        _pizza.Sauce = sauce;
-    }
-
-    [OnlyYou<PizzaDirector>]
-    public void AddTopping(string topping)
-    {
-        _pizza.AddToppings(topping);
-    }
-
-    //[Exclude]
     // Available to everyone - you can always get results
+    [Exclude]
     public Pizza Build() => _pizza;
 }
 
@@ -106,8 +93,8 @@ file class Client
 
         // But:
         var try_pizza = /*EA_METH_001*/ new Pizza(); // Compilation error!
-        /*EA_METH_001*/ builder.SetDough("Some toxic"); // Compilation error!
+        /*EA_TYPE_001*/ builder.SetDough("Some toxic"); // Compilation error!
         /*EA_TYPE_002*/ pizza.Dough = "Some toxic"; // Compilation error!
-        /*EA_METH_001*/ builder.AddTopping("toadstool"); // Compilation error!
+        /*EA_TYPE_001*/ builder.AddTopping("toadstool"); // Compilation error!
     }
 }

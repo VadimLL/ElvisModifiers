@@ -2,31 +2,38 @@
 
 file class Me
 {
-    [OnlyYouSet<MyFriend>(nameof(MyFriend.SetMoney1))]
-    public static decimal GlobalMoney { get; set; } = 100;
+    [OnlyYouSet<Friend>(nameof(Friend.SetValue1))]
+    public static int GlobalMoney { get; set; } = 100;
 
-    public const string SetMoney2 = nameof(SetMoney2);
+    public const string SetValue2 = nameof(SetValue2);
 
-    [OnlyYouSet<MyFriend>(nameof(MyFriend.SetMoney1))]
-    public decimal Money1 { get; set; } = 100;
+    [OnlyYouSet<Friend>(nameof(Friend.SetValue1))]
+    public int Value1 { get; set; } = 100;
     
-    [OnlyAliasSet<MyFriend>(SetMoney2)]
-    public decimal Money2 { get; set; } = 100;
+    [OnlyAliasSet<Friend>(SetValue2)]
+    public int Value2 { get; set; } = 100;
 
-    [OnlyYouSet<MyFriend>(nameof(MyFriend.SetMoney1))]
-    public decimal MoneyF = 100;
+    [OnlyYouSet<Friend>(nameof(Friend.SetValue1))]
+    public int MoneyF = 100;
 
 }
 
-file class MyFriend
+[OnlyYouSet<Friend>]
+file class Me2
 {
-    public void SetMoney1(in Me me) // ok
+    public int Value { get; set; } = 100;
+    public void Method() { }
+}
+
+file class Friend
+{
+    public void SetValue1(in Me me) // ok
     {
-        var half = (me.Money1) / 2;
-        me.Money1 = half;
-        me.Money1 += 100;
-        ++me.Money1;
-        me.Money1++;
+        var half = (me.Value1) / 2;
+        me.Value1 = half;
+        me.Value1 += 100;
+        ++me.Value1;
+        me.Value1++;
 
         Me.GlobalMoney = 100;
 
@@ -34,20 +41,20 @@ file class MyFriend
         ++me.MoneyF;
     }
 
-    [Alias(Me.SetMoney2)]
-    public void SetMoney2(in Me me) // ok
+    [Alias(Me.SetValue2)]
+    public void SetValue2(in Me me) // ok
     {
-        var half = (me.Money1) / 2;
-        half = (me.Money2) / 2;
-        me.Money2 = half;
-        me.Money2 += 100;
-        ++me.Money2;
-        me.Money2++;
+        var half = (me.Value1) / 2;
+        half = (me.Value2) / 2;
+        me.Value2 = half;
+        me.Value2 += 100;
+        ++me.Value2;
+        me.Value2++;
 
-        /*EA_PROP_002*/ me.Money1 = half; // err
-        /*EA_PROP_002*/ (me.Money1) = 100; // err
-        /*EA_PROP_002*/ me.Money1 += 100; // err
-        /*EA_PROP_002*/ ++((me.Money1)); // err
+        /*EA_PROP_002*/ me.Value1 = half; // err
+        /*EA_PROP_002*/ (me.Value1) = 100; // err
+        /*EA_PROP_002*/ me.Value1 += 100; // err
+        /*EA_PROP_002*/ ++((me.Value1)); // err
         //...
 
         half = Me.GlobalMoney / 2; // ok
@@ -57,38 +64,50 @@ file class MyFriend
         /*EA_PROP_002*/ ++me.MoneyF;
     }
 
-    public void CantSetMoney(in Me me)
+    public void CantSetValue(in Me me)
     {
-        var half = me.Money1 / 2; // ok
-        /*EA_PROP_002*/ me.Money1 = half; // err
-        /*EA_PROP_002*/ me.Money1 += 100; // err
-        /*EA_PROP_002*/ ++((me.Money1)); // err
+        var half = me.Value1 / 2; // ok
+        /*EA_PROP_002*/ me.Value1 = half; // err
+        /*EA_PROP_002*/ me.Value1 += 100; // err
+        /*EA_PROP_002*/ ++((me.Value1)); // err
         //...
 
-        half = (me.Money2) / 2; // ok
-        /*EA_PROP_002*/ me.Money2 = half; // err
-        /*EA_PROP_002*/ me.Money2 += 100; // err
-        /*EA_PROP_002*/ ++((me.Money2)); // err
+        half = (me.Value2) / 2; // ok
+        /*EA_PROP_002*/ me.Value2 = half; // err
+        /*EA_PROP_002*/ me.Value2 += 100; // err
+        /*EA_PROP_002*/ ++((me.Value2)); // err
         //...
 
         half = Me.GlobalMoney / 2; // ok
         /*EA_PROP_002*/ Me.GlobalMoney = half; // err
     }
+
+    public void UseMe2(Me2 me2)
+    {
+        me2.Value = 0;
+        me2.Method();
+    }
 }
 
-file class NotMyFriend
+file class NoFriend
 {
-    [Alias(Me.SetMoney2)]
-    public void SetMoney(in Me me)
+    [Alias(Me.SetValue2)]
+    public void SetValue(in Me me)
     {
-        var half = me.Money1 / 2; // ok
-        /*EA_PROP_002*/ me.Money1 = half; // err
+        var half = me.Value1 / 2; // ok
+        /*EA_PROP_002*/ me.Value1 = half; // err
         //...
 
-        half = (me.Money2) / 2; // ok
-        /*EA_PROP_002*/ me.Money2 = half; // err
+        half = (me.Value2) / 2; // ok
+        /*EA_PROP_002*/ me.Value2 = half; // err
 
         half = Me.GlobalMoney / 2; // ok
         /*EA_PROP_002*/ Me.GlobalMoney = half; // err
+    }
+
+    public void UseMe2(Me2 me2)
+    {
+        /*EA_TYPE_002*/ me2.Value = 0;
+        me2.Method(); // ok
     }
 }

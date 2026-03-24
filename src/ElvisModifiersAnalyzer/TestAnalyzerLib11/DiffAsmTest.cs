@@ -2,25 +2,25 @@
 {
     class Me
     {
-        const string MyFriend = "FriendAsm.MyFriend"; // type name from the FriendAsm assembly
+        const string Friend = "FriendAsm.Friend"; // type name from the FriendAsm assembly
 
-        [OnlyYou($"{MyFriend}", "UseMe")]
+        [OnlyYou($"{Friend}", "UseMe")]
         public int Value1 { get; set; }
 
-        [OnlyAlias($"{MyFriend}", "Alias1")]
+        [OnlyAlias($"{Friend}", "Alias1")]
         public int Value2 { get; set; }
 
-        [OnlyYouSet($"{MyFriend}", "UseMe")]
+        [OnlyYouSet($"{Friend}", "UseMe")]
         public int Value3 { get; set; }
 
-        [OnlyYou($"{MyFriend}", "UseMe")]
+        [OnlyYou($"{Friend}", "UseMe")]
         public int Method1()
         {
             Value1 += 1;
             return Value1;
         }
 
-        [OnlyAlias($"{MyFriend}", "Alias1")]
+        [OnlyAlias($"{Friend}", "Alias1")]
         public int Method2()
         {
             Value2 += 1;
@@ -28,10 +28,10 @@
         }
     }
 
-    [OnlyYou($"{MyFriend}", "UseMe2")]
+    [OnlyYou($"{Friend}", "UseMe2")]
     class Me2
     {
-        const string MyFriend = "FriendAsm.MyFriend"; // type name from the FriendAsm assembly
+        const string Friend = "FriendAsm.Friend"; // type name from the FriendAsm assembly
         public int Value1 { get; set; }
         public int Method1()
         {
@@ -45,7 +45,7 @@ namespace FriendAsm // dependet from the MeAsm assembly
 {
     using MeAsm;
 
-    class MyFriend
+    class Friend
     {
         public void UseMe(in Me me)
         {
@@ -94,7 +94,7 @@ namespace FriendAsm // dependet from the MeAsm assembly
         }
     }
 
-    class NotFriend
+    class NoFriend
     {
         public void UseMe(in Me me)
         {

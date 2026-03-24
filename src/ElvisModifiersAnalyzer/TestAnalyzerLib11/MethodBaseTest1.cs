@@ -5,15 +5,15 @@ file class Me
     public decimal Money { get; private set; } = 100;
     public decimal UnsharedMoney { get; private set; } = 100_000;
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
-    [OnlyYou<MyFriend2>]
+    [OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
+    [OnlyYou<Friend2>]
     public decimal TakeMyHalfMoney() {
         decimal half = Money / 2;
         Money -= half;
         return half;
     }
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+    [OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
     public decimal this[int index]
     {
         get => Money + index;
@@ -23,7 +23,7 @@ file class Me
     public void SelfAcceptMoney() => Money += TakeMyHalfMoney(); // ok
 }
 
-file class MyFriend
+file class Friend
 {
     public void AcceptMoney(in Me me)
     {
@@ -43,7 +43,7 @@ file class MyFriend
     public decimal Money { get; private set; } = -40;
 }
 
-file class MyFriend2
+file class Friend2
 {
     public void AcceptMoney1(in Me me) => Money += me.TakeMyHalfMoney(); // ok
     public void AcceptMoney2(in Me me) => Money += me.TakeMyHalfMoney(); // ok

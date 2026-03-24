@@ -5,7 +5,7 @@ namespace TestAnalyzerLib11;
 using System;
 
 // Bank account - context
-class BankAccount
+file class BankAccount
 {
     private IAccountState _state;
     public decimal Balance { get; private set; }
@@ -38,7 +38,7 @@ class BankAccount
 }
 
 // State interface
-interface IAccountState
+file interface IAccountState
 {
     void Deposit(decimal amount);
     void Withdraw(decimal amount);
@@ -47,7 +47,7 @@ interface IAccountState
 }
 
 // Active state
-class ActiveState : IAccountState
+file class ActiveState : IAccountState
 {
     private BankAccount _account;
 
@@ -71,7 +71,7 @@ class ActiveState : IAccountState
 }
 
 // Frozen state
-class FrozenState : IAccountState
+file class FrozenState : IAccountState
 {
     public FrozenState(BankAccount account) { }
     public void Close() { }
@@ -81,7 +81,7 @@ class FrozenState : IAccountState
 }
 
 // Closed state
-class ClosedState : IAccountState
+file class ClosedState : IAccountState
 {
     public void Close() { }
     public void Deposit(decimal amount) { }
@@ -90,7 +90,7 @@ class ClosedState : IAccountState
 }
 
 // Controlled state changing:
-class FraudDetectionService
+file class FraudDetectionService
 {
     public void CheckForFraud(BankAccount account)
     {
@@ -103,7 +103,7 @@ class FraudDetectionService
 }
 
 // Safe modification of internal data:
-class ExternalService
+file class ExternalService
 {
     public void ProcessPayment(BankAccount account)
     {

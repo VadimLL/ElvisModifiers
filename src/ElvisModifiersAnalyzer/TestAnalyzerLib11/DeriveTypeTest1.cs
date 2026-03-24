@@ -4,10 +4,10 @@ file class Me
 {
     public decimal Money { get; private set; } = 100;
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+    [OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
     public decimal Money2 { get; set; } = 100;
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney))]
+    [OnlyYou<Friend>(nameof(Friend.AcceptMoney))]
     virtual public decimal TakeMyHalfMoney()
     {
         decimal half = Money / 2;
@@ -15,7 +15,7 @@ file class Me
         return half;
     }
 
-    [OnlyYou<MyFriend>(nameof(MyFriend.AcceptMoney2))]
+    [OnlyYou<Friend>(nameof(Friend.AcceptMoney2))]
     public decimal TakeMyHalfMoney2()
     {
         decimal half = Money / 2;
@@ -62,7 +62,7 @@ file class Me2 : Me
     }
 }
 
-file class MyFriend
+file class Friend
 {
     public void AcceptMoney(in Me me) => Money += me.TakeMyHalfMoney(); // ok
     public void AcceptMoney(in Me2 me2) => Money += me2.TakeMyHalfMoney(); // ok

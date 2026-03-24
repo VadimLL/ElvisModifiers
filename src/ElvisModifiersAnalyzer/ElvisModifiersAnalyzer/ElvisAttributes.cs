@@ -8,6 +8,9 @@ public static class ElvisAttributes
     public const string OnlyYouSetAttribute = nameof(OnlyYouSetAttribute);
     public const string OnlyAliasSetAttribute = nameof(OnlyAliasSetAttribute);
     public const string AliasAttribute = nameof(AliasAttribute);
+    public const string ExcludeAttribute = nameof(ExcludeAttribute);
+    public const string ExcludeMembersAttribute = nameof(ExcludeMembersAttribute);
+    public const string OnlyNsAttribute = nameof(OnlyNsAttribute);
 
     public const string Code10 = $@"
 using System;

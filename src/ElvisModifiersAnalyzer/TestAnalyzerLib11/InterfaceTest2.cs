@@ -47,7 +47,7 @@ file class Friend : IFriend
     }
 }
 
-file class NotFriend
+file class NoFriend
 {
     public void AcceptMoney(Me1 me)
     {

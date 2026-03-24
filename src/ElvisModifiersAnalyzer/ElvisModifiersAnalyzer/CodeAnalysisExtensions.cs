@@ -43,62 +43,60 @@ public static class CodeAnalysisExtensions
 
     public static ISymbol? FindInterfaceMember(this ISymbol symbol)
     {
-        if (symbol is IMethodSymbol methodSymbol)
+        static ISymbol? findInterfaceMember<T>(INamedTypeSymbol typeSymbol, T memberSymbol)
+            where T : ISymbol
         {
-            // Check explicit implementations first
-            if (methodSymbol.ExplicitInterfaceImplementations.Any())
-            {
-                return methodSymbol.ExplicitInterfaceImplementations.First();
-            }
-
-            // Check implicit implementations
-            foreach (var interfaceType in methodSymbol.ContainingType.AllInterfaces)
+            foreach (var interfaceType in typeSymbol.AllInterfaces)
             {
                 foreach (var member in interfaceType.GetMembers())
                 {
-                    if (member is IMethodSymbol interfaceMethod)
+                    if (member is T interfaceIProperty)
                     {
-                        var implementingMember = methodSymbol.ContainingType
-                            .FindImplementationForInterfaceMember(interfaceMethod);
-
-                        if (SymbolEqualityComparer.Default.Equals(methodSymbol, implementingMember))
-                        {
-                            return interfaceMethod;
-                        }
-                    }
-                }
-            }
-        }
-        else if (symbol is IPropertySymbol propertySymbol)
-        {
-            // Check explicit implementations first
-            if (propertySymbol.ExplicitInterfaceImplementations.Any())
-            {
-                return propertySymbol.ExplicitInterfaceImplementations.First();
-            }
-
-            // Check implicit implementations
-            foreach (var interfaceType in propertySymbol.ContainingType.AllInterfaces)
-            {
-                foreach (var member in interfaceType.GetMembers())
-                {
-                    if (member is IPropertySymbol interfaceIProperty)
-                    {
-                        var implementingMember = propertySymbol.ContainingType
+                        var implementingMember = memberSymbol.ContainingType
                             .FindImplementationForInterfaceMember(interfaceIProperty);
 
-                        if (SymbolEqualityComparer.Default.Equals(propertySymbol, implementingMember))
+                        if (SymbolEqualityComparer.Default.Equals(memberSymbol, implementingMember))
                         {
                             return interfaceIProperty;
                         }
                     }
                 }
             }
+
+            return null;
+        }
+
+        switch (symbol)
+        {
+            case IMethodSymbol methodSymbol:
+                // Check explicit implementations first
+                if (methodSymbol.ExplicitInterfaceImplementations.Any())
+                {
+                    return methodSymbol.ExplicitInterfaceImplementations.First();
+                }
+
+                // Check implicit implementations
+                return findInterfaceMember(methodSymbol.ContainingType, methodSymbol);
+
+            case IPropertySymbol propertySymbol:
+                if (propertySymbol.ExplicitInterfaceImplementations.Any())
+                {
+                    return propertySymbol.ExplicitInterfaceImplementations.First();
+                }
+
+                return findInterfaceMember(propertySymbol.ContainingType, propertySymbol);
+
+            case IEventSymbol eventSymbol:
+                if (eventSymbol.ExplicitInterfaceImplementations.Any())
+                {
+                    return eventSymbol.ExplicitInterfaceImplementations.First();
+                }
+
+                return findInterfaceMember(eventSymbol.ContainingType, eventSymbol);
         }
 
         return null;
     }
-
 
     /// <summary>
     /// Not implemented yet
@@ -179,5 +177,10 @@ public static class CodeAnalysisExtensions
             IndexerDeclarationSyntax indexer => "this[..]",
             _ => "__undefined__"
         };
+    }
+
+    public static string GetNamespace(this INamedTypeSymbol classSymbol)
+    {
+        return classSymbol.ContainingNamespace.ToDisplayString();
     }
 }
