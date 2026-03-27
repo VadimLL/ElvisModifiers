@@ -39,7 +39,7 @@ public sealed class Tests
             ))
         {
             //if (new[] { "PropertySetTest1" }.Any(x => file.Contains(x))) // for debug purpose: temporary include only specific files
-            if (new[] { "TmpTest", "ExcludeTest", "InterfaceTest3" }.All(x => !file.Contains(x))) // for debug purpose: temporary exclude specific files
+            if (new[] { "TmpTest", }.All(x => !file.Contains(x))) // for debug purpose: temporary exclude specific files
             {
                 yield return [file];
             }
