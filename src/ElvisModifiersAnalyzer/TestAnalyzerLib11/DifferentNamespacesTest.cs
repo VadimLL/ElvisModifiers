@@ -2,21 +2,21 @@
 {
     file class Me
     {
-        public decimal Money { get; private set; } = 100;
+        public int Value { get; private set; } = 100;
 
-        [OnlyYou<NS1.Friend>(nameof(NS1.Friend.AcceptMoney))]
-        public decimal TakeMyHalfMoney1()
+        [OnlyYou<NS1.Friend>(nameof(NS1.Friend.AcceptValue))]
+        public int TakeHalfValue1()
         {
-            decimal half = Money / 2;
-            Money -= half;
+            int half = Value / 2;
+            Value -= half;
             return half;
         }
 
-        [OnlyYou<NS2.Friend>(nameof(NS2.Friend.AcceptMoney))]
-        public decimal TakeMyHalfMoney2()
+        [OnlyYou<NS2.Friend>(nameof(NS2.Friend.AcceptValue))]
+        public int TakeHalfValue2()
         {
-            decimal half = Money / 2;
-            Money -= half;
+            int half = Value / 2;
+            Value -= half;
             return half;
         }
     }
@@ -27,14 +27,14 @@ namespace NS1
     using TestAnalyzerLib11;
     file class Friend
     {
-        public void AcceptMoney(in Me me)
+        public void AcceptValue(in Me me)
         {
-            Money += me.TakeMyHalfMoney1(); // ok
-            Money += /*EA_METH_001*/ me.TakeMyHalfMoney2(); // err
+            Value += me.TakeHalfValue1(); // ok
+            Value += /*EA_METH_001*/ me.TakeHalfValue2(); // err
         }
-        public void CantAcceptMoney(in Me me)
-            => Money += /*EA_METH_001*/ me.TakeMyHalfMoney1(); // err
-        public decimal Money { get; private set; } = -40;
+        public void CantAcceptValue(in Me me)
+            => Value += /*EA_METH_001*/ me.TakeHalfValue1(); // err
+        public int Value { get; private set; } = -40;
     }
 }
 
@@ -43,13 +43,13 @@ namespace NS2
     using TestAnalyzerLib11;
     file class Friend
     {
-        public void AcceptMoney(in Me me)
+        public void AcceptValue(in Me me)
         {
-            Money += /*EA_METH_001*/ me.TakeMyHalfMoney1(); // err
-            Money += me.TakeMyHalfMoney2(); // ok
+            Value += /*EA_METH_001*/ me.TakeHalfValue1(); // err
+            Value += me.TakeHalfValue2(); // ok
         }
-        public void CantAcceptMoney(in Me me)
-            => Money += /*EA_METH_001*/ me.TakeMyHalfMoney2(); // err
-        public decimal Money { get; private set; } = -40;
+        public void CantAcceptValue(in Me me)
+            => Value += /*EA_METH_001*/ me.TakeHalfValue2(); // err
+        public int Value { get; private set; } = -40;
     }
 }

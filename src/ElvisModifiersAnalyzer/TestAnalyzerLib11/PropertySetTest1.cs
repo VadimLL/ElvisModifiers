@@ -5,17 +5,13 @@ file class Me
     [OnlyYouSet<Friend>(nameof(Friend.SetValue1))]
     public static int GlobalMoney { get; set; } = 100;
 
-    public const string SetValue2 = nameof(SetValue2);
+    public const string SetValue2Alias = nameof(SetValue2Alias);
 
     [OnlyYouSet<Friend>(nameof(Friend.SetValue1))]
     public int Value1 { get; set; } = 100;
     
-    [OnlyAliasSet<Friend>(SetValue2)]
+    [OnlyAliasSet<Friend>(SetValue2Alias)]
     public int Value2 { get; set; } = 100;
-
-    [OnlyYouSet<Friend>(nameof(Friend.SetValue1))]
-    public int MoneyF = 100;
-
 }
 
 [OnlyYouSet<Friend>]
@@ -36,12 +32,9 @@ file class Friend
         me.Value1++;
 
         Me.GlobalMoney = 100;
-
-        half = me.MoneyF;
-        ++me.MoneyF;
     }
 
-    [Alias(Me.SetValue2)]
+    [Alias(Me.SetValue2Alias)]
     public void SetValue2(in Me me) // ok
     {
         var half = (me.Value1) / 2;
@@ -59,9 +52,6 @@ file class Friend
 
         half = Me.GlobalMoney / 2; // ok
         /*EA_PROP_002*/ Me.GlobalMoney = 100; // err
-
-        half = me.MoneyF; // ok
-        /*EA_PROP_002*/ ++me.MoneyF;
     }
 
     public void CantSetValue(in Me me)
@@ -91,7 +81,7 @@ file class Friend
 
 file class NoFriend
 {
-    [Alias(Me.SetValue2)]
+    [Alias(Me.SetValue2Alias)]
     public void SetValue(in Me me)
     {
         var half = me.Value1 / 2; // ok

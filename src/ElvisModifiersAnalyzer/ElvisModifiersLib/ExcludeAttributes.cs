@@ -25,7 +25,7 @@ public class ExcludeAttribute<T> : Attribute
 /*-----------------------------------------------------------*/
 
 /// <summary>
-/// Not implemented yet
+/// Not implemented yet !!!
 /// </summary>
 [AttributeUsage(Constants.ExcludeTargets, AllowMultiple = true)]
 public class ExcludeMembersAttribute : Attribute
@@ -38,4 +38,16 @@ public class ExcludeMembersAttribute : Attribute
 public class ExcludeMembersAttribute<T> : Attribute
 {
     public ExcludeMembersAttribute(string member0, params string[] members) { }
+}
+
+/*-----------------------------------------------------------*/
+
+/// <summary>
+/// Not implemented yet !!!
+/// </summary>
+[AttributeUsage(Constants.ExcludeTargets, AllowMultiple = true)]
+public class ExcludeNsAttribute : Attribute
+{
+    public ExcludeNsAttribute() { }
+    public ExcludeNsAttribute(string nsName) { }
 }

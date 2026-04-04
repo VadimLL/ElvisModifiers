@@ -19,6 +19,8 @@ file class Pizza
     public string Dough { get; set; } = "Default";    
     public string Sauce { get; set; } = "Default";
 
+    // + many others proprties (cooking temperature, cooking time,...)
+
     // Only the builder can add
     [OnlyYou<PizzaBuilder>]
     public void AddToppings(string topping) => _Toppings.Add(topping);
@@ -38,6 +40,9 @@ file class PizzaBuilder
 
     public void SetDough(string dough) => _pizza.Dough = dough;
     public void SetSauce(string sauce) => _pizza.Sauce = sauce;
+
+    // + many others Set-methods
+
     public void AddTopping(string topping) => _pizza.AddToppings(topping);
 
     // Available to everyone - you can always get results

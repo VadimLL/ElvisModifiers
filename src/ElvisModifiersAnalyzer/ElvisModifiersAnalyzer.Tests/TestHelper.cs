@@ -43,7 +43,8 @@ internal static class TestHelper
             string ruleId = testCode.Substring(match.Index + 2, end_rule - match.Index - 2);
             end_rule += 2;
             int parentheses = 0;
-            if (ruleId.StartsWith(ElvisModifiersAnalyzer.EA_METH))
+            if (ruleId.StartsWith(ElvisModifiersAnalyzer.EA_METH)
+                || ruleId.StartsWith($"{ElvisModifiersAnalyzer.EA_NS}_001"))
             {
                 int end_line = testCode.IndexOf(Environment.NewLine, end_rule);
                 if (indexerRegex.Match(testCode, end_rule + 1, end_line - end_rule).Success)
@@ -56,7 +57,8 @@ internal static class TestHelper
                 }
             }
             else if (ruleId.StartsWith(ElvisModifiersAnalyzer.EA_PROP)
-                  || ruleId.StartsWith(ElvisModifiersAnalyzer.EA_TYPE))
+                  || ruleId.StartsWith(ElvisModifiersAnalyzer.EA_TYPE)
+                  || ruleId.StartsWith($"{ElvisModifiersAnalyzer.EA_NS}_002"))
             {
                 end_rule = testCode.SkipWhiteSpaces(++end_rule);
                 parentheses = testCode.SkipChars(end_rule, '(') - end_rule;

@@ -17,7 +17,7 @@
   <PropertyGroup>
     
     <PackageId>ElvisModifiers.Analyzer</PackageId>
-    <PackageVersion>1.0.5</PackageVersion>
+    <PackageVersion>1.0.6</PackageVersion>
     <Copyright>Copyright (c) LeaLan (VadimLL)</Copyright>    
     <Authors>LeaLan (VadimLL)</Authors>
     <AssemblyName>ElvisModifiers.Analyzer</AssemblyName>

@@ -179,7 +179,7 @@ public static class CodeAnalysisExtensions
         };
     }
 
-    public static string GetNamespace(this INamedTypeSymbol classSymbol)
+    public static string GetNamespace(this ITypeSymbol classSymbol)
     {
         return classSymbol.ContainingNamespace.ToDisplayString();
     }

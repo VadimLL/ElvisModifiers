@@ -1,6 +1,6 @@
 <Project>
   <!-- Add a package with attributes like a regular PackageReference -->
   <ItemGroup Condition="'$(DisableElvisModifiersLibReference)' != 'true'">
-    <PackageReference Include="ElvisModifiersLib" Version="1.0.3" />
+    <PackageReference Include="ElvisModifiersLib" Version="1.0.4" />
   </ItemGroup>
 </Project>
